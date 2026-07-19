@@ -4,7 +4,11 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import Container from "./Container";
 
-
+const STATS = [
+  { value: "5+", label: "Years serving the community" },
+  { value: "50K+", label: "Orders fire-grilled to perfection" },
+  { value: "4.9★", label: "Average rating from our guests" },
+];
 
 export default function Hero({ heroMode, heroImages, heroTitle, heroSubtitle, heroDescription }) {
   const images = heroImages?.length ? heroImages : [];

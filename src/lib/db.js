@@ -172,6 +172,14 @@ export const db = {
       shopLat: settings.shop_lat ? parseFloat(settings.shop_lat) : null,
       shopLng: settings.shop_lng ? parseFloat(settings.shop_lng) : null,
       deliveryRadiusKm: settings.delivery_radius_km !== undefined ? parseFloat(settings.delivery_radius_km) : 5,
+      contactPhone: settings.contact_phone || "",
+      contactEmail: settings.contact_email || "",
+      contactAddress: settings.contact_address || "",
+      socialFacebook: settings.social_facebook || "",
+      socialInstagram: settings.social_instagram || "",
+      socialTwitter: settings.social_twitter || "",
+      socialTiktok: settings.social_tiktok || "",
+      openHours: settings.open_hours || "",
     };
   },
 

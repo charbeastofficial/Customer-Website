@@ -294,6 +294,12 @@ export default function CartDrawer({ taxRate, onRequireLogin }) {
                         radiusKm={deliverySettings.deliveryRadiusKm}
                         onChange={setDeliveryLocation}
                       />
+                      {deliveryLocation?.address && (
+                        <p className="mt-2 text-xs text-ink-soft/70 leading-relaxed">
+                          Address shown: <span className="font-medium text-ink">{deliveryLocation.address}</span>.
+                          If this is not accurate, move the pin on the map above.
+                        </p>
+                      )}
                     </div>
                   )}
                 </div>
