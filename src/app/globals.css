@@ -1,0 +1,97 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-lexend);
+  --font-display: var(--font-bebas);
+  --font-accent: var(--font-anton);
+
+  /* Brand palette, sourced from the site's design concept board. */
+  --color-cream: #fffcf5;
+  --color-cream-soft: #fbf7ee;
+  --color-ink: #131313;
+  --color-ink-soft: #4a4642;
+  --color-stone: #d0cec8;
+  --color-stone-soft: #e9e6df;
+  --color-brand: #fb4a36;
+  --color-brand-dark: #d63a28;
+  --color-brand-soft: #fff0ed;
+
+  /* Dark maroon card treatment for product/deal cards -- makes food photos pop. */
+  --color-char: #2a0f10;
+  --color-char-deep: #150708;
+  --color-char-line: #4a1f1f;
+}
+
+body {
+  background: var(--color-cream);
+  color: var(--color-ink);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+html {
+  scroll-padding-top: 6.5rem;
+}
+
+@layer base {
+  h1, h2, h3 {
+    @apply font-display;
+    letter-spacing: 0.03em;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slideIn {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer utilities {
+  .balance {
+    text-wrap: balance;
+  }
+}
+
+::selection {
+  background: var(--color-brand);
+  color: var(--color-cream);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-stone);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-brand);
+}
