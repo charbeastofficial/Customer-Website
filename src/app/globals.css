@@ -20,6 +20,9 @@
   --color-char: #2a0f10;
   --color-char-deep: #150708;
   --color-char-line: #4a1f1f;
+
+  /* Burnt orange accent for hero tagline */
+  --color-brand-orange: #c2410c;
 }
 
 body {
@@ -56,6 +59,31 @@ html {
   @keyframes slideIn {
     from { transform: translateX(100%); }
     to { transform: translateX(0); }
+  }
+
+  @keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  @keyframes fadeSlideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+
+  @keyframes logoReveal {
+    from { letter-spacing: 0.35em; opacity: 0; }
+    to { letter-spacing: -0.025em; opacity: 1; }
   }
 
   @media (prefers-reduced-motion: reduce) {

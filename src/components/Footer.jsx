@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import Container from "./Container";
+import Reveal from "./Reveal";
 import { db } from "@/lib/db";
 
 function parseHours(raw) {
@@ -70,79 +71,89 @@ export default function Footer() {
     <footer className="bg-ink text-cream">
       <Container className="py-8">
         <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-4">
-          <div className="flex flex-col items-center text-center md:items-start md:text-left">
-            <div className="flex flex-col items-center md:items-center">
-              <Image src="/logo.png" alt="CharBeast" width={120} height={120} className="h-50 w-50 object-contain" />
-              <span className="font-display text-3xl tracking-tight text-cream">
-                Char<span className="text-brand">Beast</span>
-              </span>
-            </div>
-            <p className="mt-4 max-w-xs text-sm leading-relaxed text-cream/60">
-              Fire-grilled burgers, crispy fried chicken, and stone-baked pizza —
-              cooked fresh to order, every single time. Fast food, done properly.
-            </p>
-          </div>
-
-          <div className="md:mt-0">
-            <h4 className="text-sm font-bold tracking-wide text-cream/40 uppercase">Explore</h4>
-            <ul className="mt-4 flex flex-col gap-3">
-              {LINKS.map((link) => (
-                <li key={link.href}>
-                  <a href={link.href} className="text-sm text-cream/75 transition hover:text-brand">{link.label}</a>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="md:mt-0" id="contact">
-            <h4 className="text-sm font-bold tracking-wide text-cream/40 uppercase">Contact</h4>
-            <ul className="mt-4 flex flex-col gap-3 text-sm text-cream/75">
-              <li>{address}</li>
-              <li><a href={`tel:${phone.replace(/\D/g, '')}`} className="transition hover:text-brand">{phone}</a></li>
-              <li><a href={`mailto:${email}`} className="transition hover:text-brand">{email}</a></li>
-            </ul>
-            {socialLinks.length > 0 && (
-              <div className="mt-6 flex gap-3">
-                {socialLinks.map((s) => (
-                  <a key={s.key} href={s.href} target="_blank" rel="noopener noreferrer"
-                    className="rounded-full bg-cream/10 p-2.5 text-cream/60 transition hover:bg-brand hover:text-white hover:scale-110"
-                    aria-label={s.label}>
-                    <SocialIcon platform={s.key} />
-                  </a>
-                ))}
+          <Reveal delay={0}>
+            <div className="flex flex-col items-center text-center md:items-start md:text-left">
+              <div className="flex flex-col items-center md:items-center">
+                <Image src="/logo.png" alt="CharBeast" width={120} height={120} className="h-40 w-40 object-contain" />
+                <span className="font-display text-3xl tracking-[0.15em] text-cream ">
+                  Char<span className="text-brand ">Beast</span>
+                </span>
               </div>
-            )}
-          </div>
+              <p className="mt-4 max-w-xs text-sm leading-relaxed text-cream/60">
+                Fire-grilled burgers, crispy fried chicken, and stone-baked pizza —
+                cooked fresh to order, every single time. Fast food, done properly.
+              </p>
+            </div>
+          </Reveal>
 
-          <div className="md:mt-0">
-            <h4 className="text-sm font-bold tracking-wide text-cream/40 uppercase">Hours</h4>
-            {hours.length > 0 ? (
-              <ul className="mt-4 flex flex-col gap-3 text-sm text-cream/75">
-                {hours.map((h) => (
-                  <li key={h.day} className="flex flex-col">
-                    <span className="text-cream/50">{h.day}</span>
-                    <span>{h.closed ? "Closed" : `${formatTime(h.open)} – ${formatTime(h.close)}`}</span>
+          <Reveal delay={100}>
+            <div className="md:mt-0">
+              <h4 className="text-sm font-bold tracking-wide text-cream/40 uppercase">Explore</h4>
+              <ul className="mt-4 flex flex-col gap-3">
+                {LINKS.map((link) => (
+                  <li key={link.href}>
+                    <a href={link.href} className="relative inline-block text-sm text-cream/75 transition hover:text-brand after:absolute after:-bottom-0.5 after:left-0 after:h-px after:w-0 after:bg-brand after:transition-all after:duration-300 hover:after:w-full">{link.label}</a>
                   </li>
                 ))}
               </ul>
-            ) : (
+            </div>
+          </Reveal>
+
+          <Reveal delay={200}>
+            <div className="md:mt-0" id="contact">
+              <h4 className="text-sm font-bold tracking-wide text-cream/40 uppercase">Contact</h4>
               <ul className="mt-4 flex flex-col gap-3 text-sm text-cream/75">
-                <li className="flex flex-col"><span className="text-cream/50">Mon – Thu</span><span>12:00 PM – 11:00 PM</span></li>
-                <li className="flex flex-col"><span className="text-cream/50">Fri – Sat</span><span>12:00 PM – 1:00 AM</span></li>
-                <li className="flex flex-col"><span className="text-cream/50">Sunday</span><span>1:00 PM – 11:00 PM</span></li>
+                <li className="transition hover:text-cream/90">{address}</li>
+                <li><a href={`tel:${phone.replace(/\D/g, '')}`} className="transition hover:text-brand">{phone}</a></li>
+                <li><a href={`mailto:${email}`} className="transition hover:text-brand">{email}</a></li>
               </ul>
-            )}
-          </div>
+              {socialLinks.length > 0 && (
+                <div className="mt-6 flex gap-3">
+                  {socialLinks.map((s) => (
+                    <a key={s.key} href={s.href} target="_blank" rel="noopener noreferrer"
+                      className="rounded-full bg-cream/10 p-2.5 text-cream/60 transition-all duration-300 hover:bg-brand hover:text-white hover:scale-110 hover:shadow-lg hover:shadow-brand/30"
+                      aria-label={s.label}>
+                      <SocialIcon platform={s.key} />
+                    </a>
+                  ))}
+                </div>
+              )}
+            </div>
+          </Reveal>
+
+          <Reveal delay={300}>
+            <div className="md:mt-0">
+              <h4 className="text-sm font-bold tracking-wide text-cream/40 uppercase">Hours</h4>
+              {hours.length > 0 ? (
+                <ul className="mt-4 flex flex-col gap-3 text-sm text-cream/75">
+                  {hours.map((h) => (
+                    <li key={h.day} className="flex flex-col transition hover:text-cream/90">
+                      <span className="text-cream/50">{h.day}</span>
+                      <span>{h.closed ? "Closed" : `${formatTime(h.open)} – ${formatTime(h.close)}`}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <ul className="mt-4 flex flex-col gap-3 text-sm text-cream/75">
+                  <li className="flex flex-col"><span className="text-cream/50">Mon – Thu</span><span>12:00 PM – 11:00 PM</span></li>
+                  <li className="flex flex-col"><span className="text-cream/50">Fri – Sat</span><span>12:00 PM – 1:00 AM</span></li>
+                  <li className="flex flex-col"><span className="text-cream/50">Sunday</span><span>1:00 PM – 11:00 PM</span></li>
+                </ul>
+              )}
+            </div>
+          </Reveal>
         </div>
 
-        <div className="mt-14 flex flex-col items-center justify-between gap-3 border-t border-cream/10 pt-6 text-xs text-cream/40 sm:flex-row">
-          <span>© {new Date().getFullYear()} CharBeast. All rights reserved.</span>
-          <span>
-            Powered by{" "}
-            <a href="https://abdulsalam78976.github.io/AppCrafters/" target="_blank" rel="noopener noreferrer"
-              className="font-semibold text-cream/70 transition hover:text-brand">AppCrafters</a>
-          </span>
-        </div>
+        <Reveal delay={400}>
+          <div className="mt-14 flex flex-col items-center justify-between gap-3 border-t border-cream/10 pt-6 text-xs text-cream/40 sm:flex-row">
+            <span>© {new Date().getFullYear()} CharBeast. All rights reserved.</span>
+            <span>
+              Powered by{" "}
+              <a href="https://abdulsalam78976.github.io/AppCrafters/" target="_blank" rel="noopener noreferrer"
+                className="font-semibold text-cream/70 transition hover:text-brand">AppCrafters</a>
+            </span>
+          </div>
+        </Reveal>
       </Container>
     </footer>
   );

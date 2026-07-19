@@ -1,15 +1,18 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export default function SplashScreen({ children }) {
   const [phase, setPhase] = useState("enter");
   const [show, setShow] = useState(true);
+  const shownRef = useRef(false);
 
   useEffect(() => {
-    const enterTimer = setTimeout(() => setPhase("exit"), 2000);
-    const removeTimer = setTimeout(() => setShow(false), 2800);
+    if (shownRef.current) { setShow(false); return; }
+    shownRef.current = true;
+    const enterTimer = setTimeout(() => setPhase("exit"), 1200);
+    const removeTimer = setTimeout(() => setShow(false), 2000);
     return () => {
       clearTimeout(enterTimer);
       clearTimeout(removeTimer);
@@ -28,6 +31,7 @@ export default function SplashScreen({ children }) {
         {/* Background glow orbs */}
         <div className="absolute -top-40 -right-40 h-96 w-96 rounded-full bg-brand/10 blur-3xl animate-pulse" />
         <div className="absolute -bottom-40 -left-40 h-96 w-96 rounded-full bg-brand/5 blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-64 w-64 rounded-full bg-brand-orange/5 blur-3xl animate-pulse" style={{ animationDelay: "0.5s" }} />
         
         {/* Logo Container */}
         <div className="relative mb-6">
@@ -55,8 +59,8 @@ export default function SplashScreen({ children }) {
                 alt="CharBeast"
                 width={120}
                 height={120}
-                className={`relative h-32 w-32 object-contain transition-all duration-700 sm:h-40 sm:w-40 ${
-                  phase === "enter" ? "animate-pulse" : ""
+                className={`relative h-32 w-32 object-contain transition-all duration-700 motion-safe:animate-pulse sm:h-40 sm:w-40 ${
+                  phase === "enter" ? "scale-100" : "scale-75 opacity-0"
                 }`}
                 priority
               />
@@ -66,37 +70,24 @@ export default function SplashScreen({ children }) {
 
         {/* Brand Name */}
         <div className="flex flex-col items-center gap-1">
-          <span className={`font-display text-4xl tracking-tight text-white transition-all duration-700 sm:text-5xl ${
-            phase === "enter" ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+          <span className={`font-display text-4xl tracking-[0.15em] text-white sm:text-5xl ${
+            phase === "enter" ? "animate-[logoReveal_0.8s_ease-out_both]" : "opacity-0 -translate-y-4 transition-all duration-700"
           }`}>
             Char<span className="text-brand">Beast</span>
           </span>
-          <span className={`text-xs font-medium tracking-[0.2em] uppercase text-white/40 transition-all duration-700 delay-100 ${
+          <span className={`text-xs font-medium tracking-[0.2em] uppercase text-white/40 transition-all duration-700 delay-150 ${
             phase === "enter" ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
           }`}>
             Fire & Flavor
           </span>
         </div>
 
-        {/* Loading Dots */}
-        <div className={`mt-10 flex gap-2 transition-all duration-700 delay-200 ${
-          phase === "enter" ? "opacity-100" : "opacity-0"
-        }`}>
-          {[...Array(3)].map((_, i) => (
-            <div
-              key={i}
-              className="h-2.5 w-2.5 rounded-full bg-brand"
-              style={{
-                animation: `bounce 1s ease-in-out ${i * 0.15}s infinite`,
-              }}
-            />
-          ))}
-        </div>
+      
       </div>
 
       {/* Main Content */}
       <div
-        className={`transition-all duration-700 ${
+        className={`transition-all duration-500 ${
           phase === "exit" ? "opacity-100" : "opacity-0"
         }`}
       >
@@ -104,7 +95,7 @@ export default function SplashScreen({ children }) {
       </div>
 
       <style jsx>{`
-        @keyframes bounce {
+        @keyframes splashBounce {
           0%, 100% {
             transform: translateY(0);
             opacity: 0.3;

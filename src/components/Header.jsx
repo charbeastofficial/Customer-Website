@@ -67,7 +67,7 @@ export default function Header({ onAccountClick, floating = false }) {
 
           <div className="flex flex-col leading-none">
             <span className={`
-              font-display text-2xl tracking-tight transition-colors duration-300
+              font-display text-2xl tracking-[0.15em] transition-colors duration-300
               ${isFloating ? "text-white" : "text-ink"}
             `}>
               Char<span className="text-brand">Beast</span>

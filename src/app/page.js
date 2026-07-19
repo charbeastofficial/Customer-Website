@@ -14,7 +14,9 @@ export default async function Home() {
     db.getReviews().catch(() => []),
   ]);
 
-  const images = heroImages.length > 0 ? heroImages.map((h) => h.imageURL) : [siteSettings.heroImageUrl].filter(Boolean);
+  const images = siteSettings.heroMode === "carousel"
+    ? heroImages.map((h) => h.imageURL)
+    : [siteSettings.heroImageUrl].filter(Boolean);
 
   return (
     <HomeView
