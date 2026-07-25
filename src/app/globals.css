@@ -23,6 +23,11 @@
 
   /* Burnt orange accent for hero tagline */
   --color-brand-orange: #c2410c;
+
+  /* Warm gold accent for CTAs, badges, and highlights */
+  --color-gold: #a16207;
+  --color-gold-soft: #fef9e7;
+  --color-gold-line: #e6c35c;
 }
 
 body {
@@ -98,6 +103,15 @@ html {
 @layer utilities {
   .balance {
     text-wrap: balance;
+  }
+
+  .transition-default {
+    transition: all 0.2s ease-out;
+  }
+
+  @keyframes splashBounce {
+    0%, 100% { transform: translateY(0); opacity: 0.3; }
+    50% { transform: translateY(-12px); opacity: 1; }
   }
 }
 

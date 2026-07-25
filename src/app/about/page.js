@@ -5,6 +5,7 @@ import Container from "@/components/Container";
 import Reveal from "@/components/Reveal";
 import Eyebrow from "@/components/Eyebrow";
 import TestimonialsSection from "@/components/TestimonialsSection";
+import FeaturesSection from "@/components/FeaturesSection";
 
 export const revalidate = 0;
 
@@ -83,6 +84,9 @@ export default async function AboutPage() {
         </Container>
       </section>
 
+
+      {/* Features / Why Choose Us */}
+      <FeaturesSection />
 
       {/* Testimonials */}
       <TestimonialsSection reviews={reviews} />

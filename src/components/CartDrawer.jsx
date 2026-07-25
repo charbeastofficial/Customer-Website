@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth-context";
 import { formatCurrency } from "@/lib/currency";
 import { db } from "@/lib/db";
 import LocationPicker from "./LocationPicker";
+import { useToast } from "./Toast";
 
 const LAST_ORDER_KEY = "charbeast_last_order_id";
 
@@ -28,6 +29,7 @@ const STATUS_COLORS = {
 export default function CartDrawer({ taxRate, onRequireLogin }) {
   const { items, updateQuantity, removeItem, subtotal, isOpen, setIsOpen, clearCart } = useCart();
   const { user } = useAuth();
+  const toast = useToast();
 
   const [orderType, setOrderType] = useState("Takeaway");
   const [deliveryLocation, setDeliveryLocation] = useState(null);
@@ -124,12 +126,14 @@ export default function CartDrawer({ taxRate, onRequireLogin }) {
               }
             : {
                 productId: item.productId,
-                name: item.modifiers.length
-                  ? `${item.name} (${item.modifiers.map((m) => m.name).join(", ")})`
-                  : item.name,
+                name: item.name,
                 quantity: item.quantity,
                 unitPrice: item.unitPrice,
-                notes: item.note || "",
+                notes: [
+                  item.size && item.size.name,
+                  ...item.modifiers.map((m) => m.name),
+                  item.note,
+                ].filter(Boolean).join(" — "),
               }
         ),
       });
@@ -141,6 +145,7 @@ export default function CartDrawer({ taxRate, onRequireLogin }) {
         // private browsing etc -- tracking just won't persist across visits
       }
       clearCart();
+      toast("Order placed successfully!");
     } catch (err) {
       console.error("Failed to place order:", err);
       setError("Something went wrong placing your order. Please try again.");
@@ -184,8 +189,12 @@ export default function CartDrawer({ taxRate, onRequireLogin }) {
           <OrderTracker order={trackedOrder} user={user} onClose={close} />
         ) : items.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
-            <div className="flex h-24 w-24 items-center justify-center rounded-full bg-stone-soft/50 text-5xl">
-              🛒
+            <div className="flex h-24 w-24 items-center justify-center rounded-full bg-stone-soft/50">
+              <svg className="h-10 w-10 text-stone" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <path d="M16 10a4 4 0 0 1-8 0" />
+              </svg>
             </div>
             <div>
               <h3 className="text-lg font-bold text-ink">Your cart is empty</h3>
@@ -206,7 +215,7 @@ export default function CartDrawer({ taxRate, onRequireLogin }) {
               <div className="flex flex-col gap-4">
                 {items.map((item) => (
                   <div key={item.cartItemId} className="group flex items-start gap-3 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-stone/10 transition hover:shadow-md">
-                    <CartItemThumb imageURL={item.imageURL} />
+                    <CartItemThumb imageURL={item.imageURL} name={item.name} />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5">
                         {item.isDeal && (
@@ -219,8 +228,9 @@ export default function CartDrawer({ taxRate, onRequireLogin }) {
                       {item.isDeal && item.includes?.length > 0 && (
                         <p className="mt-0.5 text-xs text-ink-soft/70 line-clamp-1">{item.includes.join(", ")}</p>
                       )}
-                      {!item.isDeal && item.modifiers.length > 0 && (
+                      {!item.isDeal && (
                         <p className="mt-0.5 truncate text-xs text-ink-soft/70">
+                          {item.size && <span className="font-medium text-ink/60">{item.size.name} · </span>}
                           {item.modifiers.map((m) => m.name).join(", ")}
                         </p>
                       )}
@@ -230,28 +240,28 @@ export default function CartDrawer({ taxRate, onRequireLogin }) {
                       <button
                         type="button"
                         onClick={() => setConfirmRemoveId(item.cartItemId)}
-                        className="text-xs text-ink-soft/50 transition hover:text-brand opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
+                        className="text-xs text-ink-soft/50 transition hover:text-brand"
                       >
                         Remove
                       </button>
-                      <div className="flex items-center gap-1 rounded-full bg-stone-soft/50 px-1 py-1 ring-1 ring-stone/10">
+                      <div className="flex items-center gap-1 rounded-lg bg-stone-soft/50 px-1 py-1 ring-1 ring-stone/10">
                         <button
                           type="button"
                           onClick={() => updateQuantity(item.cartItemId, -1)}
-                          className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-ink shadow-sm transition hover:shadow active:scale-90"
+                          className="flex h-8 w-8 items-center justify-center rounded-md bg-white text-ink-soft/70 shadow-sm transition hover:text-ink active:scale-90"
                         >
-                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M20 12H4" />
+                          <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5} strokeLinecap="round">
+                            <path d="M20 12H4" />
                           </svg>
                         </button>
-                        <span className="w-6 text-center text-sm font-bold text-ink">{item.quantity}</span>
+                        <span className="w-6 text-center text-sm font-semibold text-ink">{item.quantity}</span>
                         <button
                           type="button"
                           onClick={() => updateQuantity(item.cartItemId, 1)}
-                          className="flex h-9 w-9 items-center justify-center rounded-full bg-brand text-white shadow-sm transition hover:shadow-md active:scale-90"
+                          className="flex h-8 w-8 items-center justify-center rounded-md bg-brand text-white shadow-sm transition hover:bg-brand-dark active:scale-90"
                         >
-                          <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+                          <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5} strokeLinecap="round">
+                            <path d="M12 4v16m8-8H4" />
                           </svg>
                         </button>
                       </div>
@@ -276,17 +286,33 @@ export default function CartDrawer({ taxRate, onRequireLogin }) {
                             : "bg-white border border-stone/30 text-ink-soft hover:border-brand/50"
                         }`}
                       >
-                        <span className="flex items-center justify-center gap-2">
-                          {type === "Takeaway" ? "🏠" : "🚗"}
-                          {type}
-                        </span>
+                          <span className="flex items-center justify-center gap-2">
+                            {type === "Takeaway" ? (
+                              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                                <polyline points="9 22 9 12 15 12 15 22" />
+                              </svg>
+                            ) : (
+                              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M5 17h14l2-6H3l2 6z" />
+                                <path d="M17 21a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" />
+                                <path d="M7 21a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" />
+                                <path d="M3 9h4l2-4h6l2 4h4" />
+                              </svg>
+                            )}
+                            {type}
+                          </span>
                       </button>
                     ))}
                   </div>
                   {orderType === "Delivery" && (
                     <div className="mt-3">
                       <p className="mb-2 text-xs text-ink-soft flex items-center gap-1">
-                        <span>📍</span> Tap the map to drop a pin at your delivery location.
+                        <svg className="h-3.5 w-3.5 shrink-0 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                          <circle cx="12" cy="10" r="3" />
+                        </svg>
+                        Tap the map to drop a pin at your delivery location.
                       </p>
                       <LocationPicker
                         shopLat={deliverySettings.shopLat}
@@ -327,7 +353,12 @@ export default function CartDrawer({ taxRate, onRequireLogin }) {
                 {error && (
                   <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3">
                     <p className="text-sm font-medium text-red-600 flex items-center gap-2">
-                      <span>⚠️</span> {error}
+                      <svg className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                        <line x1="12" y1="9" x2="12" y2="13" />
+                        <line x1="12" y1="17" x2="12.01" y2="17" />
+                      </svg>
+                      {error}
                     </p>
                   </div>
                 )}
@@ -368,8 +399,12 @@ export default function CartDrawer({ taxRate, onRequireLogin }) {
                     </>
                   ) : (
                     <>
-                      <span>💰</span>
-                      Place Order — Cash on Delivery
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="2" y="6" width="20" height="12" rx="2" />
+                        <circle cx="12" cy="12" r="2" />
+                        <path d="M6 12h.01M18 12h.01" />
+                      </svg>
+                      Place Order
                     </>
                   )}
                 </button>
@@ -379,7 +414,10 @@ export default function CartDrawer({ taxRate, onRequireLogin }) {
                   onClick={onRequireLogin}
                   className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-ink py-3.5 text-sm font-bold text-cream transition hover:bg-ink/85 hover:shadow-lg active:scale-[0.98]"
                 >
-                  <span>🔐</span>
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
                   Log In to Order
                 </button>
               )}
@@ -400,7 +438,7 @@ export default function CartDrawer({ taxRate, onRequireLogin }) {
               <button type="button" onClick={() => setConfirmRemoveId(null)} className="rounded-full border border-stone/30 bg-cream px-5 py-2.5 text-sm font-semibold text-ink-soft transition hover:border-stone/60 hover:text-ink">
                 Cancel
               </button>
-              <button type="button" onClick={() => { removeItem(confirmRemoveId); setConfirmRemoveId(null); }} className="rounded-full bg-brand px-5 py-2.5 text-sm font-bold text-white transition hover:bg-brand-dark active:scale-95">
+              <button type="button" onClick={() => { removeItem(confirmRemoveId); toast("Item removed from cart", "info"); setConfirmRemoveId(null); }} className="rounded-full bg-brand px-5 py-2.5 text-sm font-bold text-white transition hover:bg-brand-dark active:scale-95">
                 Remove
               </button>
             </div>
@@ -411,15 +449,19 @@ export default function CartDrawer({ taxRate, onRequireLogin }) {
   );
 }
 
-function CartItemThumb({ imageURL }) {
+function CartItemThumb({ imageURL, name }) {
   const [broken, setBroken] = useState(false);
   return (
-    <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-stone-soft/50 text-2xl ring-1 ring-stone/10">
+    <div className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-cream-soft shadow-sm ring-1 ring-stone/20">
       {imageURL && !broken ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={imageURL} alt="" className="h-full w-full object-cover" onError={() => setBroken(true)} />
+        <img src={imageURL} alt={name || ""} className="h-full w-full object-cover" onError={() => setBroken(true)} />
       ) : (
-        "🍔"
+        <svg className="h-7 w-7 text-stone" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2" />
+          <circle cx="8.5" cy="8.5" r="1.5" />
+          <path d="m21 15-5-5L5 21" />
+        </svg>
       )}
     </div>
   );
@@ -456,7 +498,16 @@ function OrderTracker({ order, user, onClose }) {
           ? "bg-green-100 shadow-green-200" 
           : "bg-amber-100 shadow-amber-200 animate-pulse"
       }`}>
-        {isCompleted ? "🎉" : "🔥"}
+        {isCompleted ? (
+          <svg className="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="9" />
+            <path d="M8 12l2 2 4-4" />
+          </svg>
+        ) : (
+          <svg className="h-8 w-8 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z" />
+          </svg>
+        )}
       </div>
       
       <div>
@@ -509,7 +560,11 @@ function OrderTracker({ order, user, onClose }) {
       )}
       {isCompleted && (alreadyReviewed || justReviewed) && (
         <div className="flex items-center gap-2 rounded-2xl bg-green-50 border border-green-200 px-4 py-3 text-sm font-semibold text-green-700">
-          <span>✅</span> Thanks for the review! 🙌
+          <svg className="h-5 w-5 shrink-0 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+            <polyline points="22 4 12 14.01 9 11.01" />
+          </svg>
+          Thanks for the review!
         </div>
       )}
 

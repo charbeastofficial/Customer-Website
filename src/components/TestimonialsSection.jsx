@@ -41,7 +41,7 @@ export default function TestimonialsSection({ reviews }) {
     <section id="reviews" className="py-20 lg:py-28">
       <Container>
         <Reveal className="text-center">
-          <Eyebrow className="text-center">Reviews</Eyebrow>
+          <Eyebrow center>Reviews</Eyebrow>
           <h2 className="balance mx-auto mt-4 max-w-lg text-3xl font-bold text-ink sm:text-4xl">
             What people say after the first bite.
           </h2>
@@ -50,22 +50,25 @@ export default function TestimonialsSection({ reviews }) {
         <div className="mt-12 grid grid-cols-1 gap-5 md:grid-cols-3">
           {items.map((t, i) => (
             <Reveal key={`${t.name}-${i}`} delay={i * 100}>
-              <figure className="flex h-full flex-col rounded-3xl border border-stone/70 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg hover:shadow-ink/5">
-                <div className="flex gap-0.5 text-brand">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <StarIcon key={i} filled={i < t.rating} />
-                  ))}
-                </div>
-                <blockquote className="mt-4 flex-1 text-sm leading-relaxed text-ink-soft">"{t.quote}"</blockquote>
-                <figcaption className="mt-5 flex items-center gap-3 border-t border-stone/60 pt-4">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-soft text-sm font-bold text-brand">
-                    {t.name.charAt(0)}
-                  </span>
-                  <div>
-                    <p className="text-sm font-bold text-ink">{t.name}</p>
-                    <p className="text-xs text-ink-soft">{t.tag}</p>
+              <figure className="group relative flex h-full flex-col overflow-hidden rounded-3xl bg-white p-6 sm:p-8 shadow-sm ring-1 ring-stone/10 transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:ring-brand/20">
+                <div className="absolute inset-0 bg-gradient-to-br from-brand/5 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 pointer-events-none" />
+                <div className="relative z-10 flex flex-col h-full">
+                  <div className="flex gap-0.5 text-brand">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <StarIcon key={i} filled={i < t.rating} />
+                    ))}
                   </div>
-                </figcaption>
+                  <blockquote className="mt-5 flex-1 text-[15px] italic leading-relaxed text-ink-soft/80 group-hover:text-ink-soft transition-colors">"{t.quote}"</blockquote>
+                  <figcaption className="mt-6 flex items-center gap-4 pt-5 border-t border-stone/30">
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand to-brand-dark text-sm font-bold text-white shadow-md shadow-brand/20 group-hover:scale-110 transition-transform">
+                      {t.name.charAt(0)}
+                    </span>
+                    <div className="flex flex-col">
+                      <p className="text-sm font-bold text-ink">{t.name}</p>
+                      <p className="text-[11px] font-semibold tracking-wide uppercase text-ink-soft/50">{t.tag}</p>
+                    </div>
+                  </figcaption>
+                </div>
               </figure>
             </Reveal>
           ))}

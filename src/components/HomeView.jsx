@@ -37,7 +37,7 @@ export default function HomeView({
         />
         <DealsSection deals={deals} products={products} />
         <MenuSection categories={categories} products={products} />
-       
+        <TestimonialsSection reviews={reviews} />
       </main>
       <Footer />
       <CartDrawer taxRate={taxRate} onRequireLogin={() => setAuthOpen(true)} />

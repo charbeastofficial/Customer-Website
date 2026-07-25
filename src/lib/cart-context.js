@@ -38,7 +38,6 @@ export function CartProvider({ children }) {
         },
       ];
     });
-    setIsOpen(true);
   };
 
   // A deal is added as one bundled cart line (its own name + price), not as
@@ -71,7 +70,6 @@ export function CartProvider({ children }) {
         },
       ];
     });
-    setIsOpen(true);
   };
 
   const updateQuantity = (cartItemId, change) => {

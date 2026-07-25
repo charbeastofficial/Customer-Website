@@ -34,130 +34,84 @@ export default function Header({ onAccountClick, floating = false }) {
   const isFloating = floating && !scrolled;
 
   return (
-    <header
-      className={`
-        fixed top-0 right-0 left-0 z-50 transition-all duration-500
-        ${isFloating 
-          ? "bg-transparent" 
-          : "bg-cream/95 backdrop-blur-xl shadow-[0_4px_30px_-10px_rgba(0,0,0,0.1)] border-b border-stone/10"
-        }
-      `}
-    >
-      <Container className="flex h-20 items-center justify-between gap-4 sm:h-22">
-        {/* Logo */}
-        <Link
-          href="/"
-          onClick={() => setActive("/")}
-          className="group flex shrink-0 items-center  py-2 transition-transform hover:scale-105"
-        >
-          <div className="relative">
-            <div className={`
-              absolute -inset-1 rounded-full blur-xl transition-opacity duration-500
-              ${isFloating ? "bg-white/10 opacity-0 group-hover:opacity-100" : "bg-brand/10 opacity-0 group-hover:opacity-100"}
-            `} />
-            <Image
-              src="/logo.png"
-              alt="CharBeast"
-              width={64}
-              height={64}
-              className="relative h-16 w-16 object-contain transition-all duration-500 group-hover:rotate-[-5deg]"
-              priority
-            />
-          </div>
-
-          <div className="flex flex-col leading-none">
-            <span className={`
-              font-display text-2xl tracking-[0.15em] transition-colors duration-300
-              ${isFloating ? "text-white" : "text-ink"}
-            `}>
-              Char<span className="text-brand">Beast</span>
-            </span>
-           
-          </div>
-        </Link>
-
-        {/* Desktop Navigation */}
-        <nav className="hidden items-center gap-8 md:flex">
-          {NAV_LINKS.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              onClick={() => setActive(link.href)}
-              className={`
-                relative py-2 text-sm font-medium transition-all duration-300
-                ${activeHref === link.href
-                  ? "text-brand"
-                  : isFloating
-                    ? "text-white/70 hover:text-white"
-                    : "text-ink-soft/80 hover:text-ink"
-                }
-                before:absolute before:-bottom-1 before:left-0 before:h-[2px] before:rounded-full before:transition-all before:duration-300
-                ${activeHref === link.href
-                  ? "before:w-full before:bg-brand"
-                  : "before:w-0 hover:before:w-full hover:before:bg-brand/50"
-                }
-              `}
-            >
-              {link.label}
-            </a>
-          ))}
-        </nav>
-
-        {/* Right Actions */}
-        <div className="flex items-center gap-1.5">
-          {/* Cart Button */}
-          <button
-            type="button"
-            aria-label="Cart"
-            onClick={() => setIsOpen(true)}
-            className={`
-              group relative flex h-11 w-11 items-center justify-center rounded-full transition-all duration-300
-              ${isFloating 
-                ? "text-white/80 hover:bg-white/10 hover:text-white" 
-                : "text-ink-soft/80 hover:bg-stone-soft/80 hover:text-ink"
-              }
-              hover:scale-105 active:scale-95
-            `}
+    <div className="fixed top-4 left-0 right-0 z-50 flex flex-col items-center px-4 sm:px-6 lg:px-8 pointer-events-none">
+      <header
+        className={`
+          pointer-events-auto transition-all duration-500 w-full max-w-7xl rounded-full
+          ${isFloating 
+            ? "bg-transparent" 
+            : "bg-cream/95 backdrop-blur-xl shadow-lg border border-stone/10"
+          }
+        `}
+      >
+        <div className="mx-auto flex h-16 sm:h-20 w-full items-center justify-between gap-4 px-6 lg:px-8">
+          {/* Logo */}
+          <Link
+            href="/"
+            onClick={() => setActive("/")}
+            className="group flex shrink-0 items-center py-2 transition-transform hover:scale-105"
           >
-            <ShoppingBagIcon className="h-5 w-5 transition-transform duration-300 group-hover:rotate-[-5deg]" />
-            {itemCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 flex h-5 min-w-[20px] animate-bounce-once items-center justify-center rounded-full bg-brand px-1.5 text-[10px] font-bold text-white shadow-lg shadow-brand/30">
-                {itemCount}
-              </span>
-            )}
-          </button>
+            <div className="relative">
+              <div className={`
+                absolute -inset-1 rounded-full blur-xl transition-opacity duration-500
+                ${isFloating ? "bg-white/10 opacity-0 group-hover:opacity-100" : "bg-brand/10 opacity-0 group-hover:opacity-100"}
+              `} />
+              <Image
+                src="/logo.png"
+                alt="CharBeast"
+                width={64}
+                height={64}
+                className="relative h-12 w-12 sm:h-14 sm:w-14 object-contain transition-all duration-500 group-hover:rotate-[-5deg]"
+                priority
+              />
+            </div>
 
-          {/* User/Account */}
-          {user ? (
-            <a
-              href="/account"
-              aria-label="Your account"
-              className={`
-                group relative flex h-11 w-11 items-center justify-center rounded-full transition-all duration-300
-                ${isFloating 
-                  ? "hover:bg-white/10" 
-                  : "hover:bg-stone-soft/80"
-                }
-                hover:scale-105 active:scale-95
-              `}
-            >
-              <div className="relative">
-                <div className={`
-                  absolute -inset-1 rounded-full blur-md transition-opacity duration-300
-                  ${isFloating ? "bg-white/20 opacity-0 group-hover:opacity-100" : "bg-brand/20 opacity-0 group-hover:opacity-100"}
-                `} />
-                <span className="relative flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-brand to-brand/80 text-xs font-bold text-white shadow-lg shadow-brand/30">
-                  {(user.user_metadata?.display_name || user.email || "?").charAt(0).toUpperCase()}
-                </span>
-              </div>
-            </a>
-          ) : (
+            <div className="flex flex-col leading-none ml-2">
+              <span className={`
+                font-display text-xl sm:text-2xl tracking-[0.15em] transition-colors duration-300
+                ${isFloating ? "text-white" : "text-ink"}
+              `}>
+                Char<span className="text-brand">Beast</span>
+              </span>
+            </div>
+          </Link>
+
+          {/* Desktop Navigation */}
+          <nav className="hidden items-center gap-8 md:flex">
+            {NAV_LINKS.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                onClick={() => setActive(link.href)}
+                className={`
+                  relative py-2 text-sm font-medium transition-all duration-300
+                  ${activeHref === link.href
+                    ? "text-brand"
+                    : isFloating
+                      ? "text-white/70 hover:text-white"
+                      : "text-ink-soft/80 hover:text-ink"
+                  }
+                  before:absolute before:-bottom-1 before:left-0 before:h-[2px] before:rounded-full before:transition-all before:duration-300
+                  ${activeHref === link.href
+                    ? "before:w-full before:bg-brand"
+                    : "before:w-0 hover:before:w-full hover:before:bg-brand/50"
+                  }
+                `}
+              >
+                {link.label}
+              </a>
+            ))}
+          </nav>
+
+          {/* Right Actions */}
+          <div className="flex items-center gap-1.5">
+            {/* Cart Button */}
             <button
               type="button"
-              aria-label="Log in"
-              onClick={onAccountClick}
+              aria-label="Cart"
+              onClick={() => setIsOpen(true)}
               className={`
-                group relative flex h-11 w-11 items-center justify-center rounded-full transition-all duration-300
+                group relative flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-full transition-all duration-300
                 ${isFloating 
                   ? "text-white/80 hover:bg-white/10 hover:text-white" 
                   : "text-ink-soft/80 hover:bg-stone-soft/80 hover:text-ink"
@@ -165,40 +119,87 @@ export default function Header({ onAccountClick, floating = false }) {
                 hover:scale-105 active:scale-95
               `}
             >
-              <UserIcon className="h-5 w-5 transition-transform duration-300 group-hover:scale-110" />
+              <ShoppingBagIcon className="h-5 w-5 transition-transform duration-300 group-hover:rotate-[-5deg]" />
+              {itemCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 flex h-5 min-w-[20px] animate-bounce-once items-center justify-center rounded-full bg-brand px-1.5 text-[10px] font-bold text-white shadow-lg shadow-brand/30">
+                  {itemCount}
+                </span>
+              )}
             </button>
-          )}
 
-          {/* Mobile Menu Toggle */}
-          <button
-            type="button"
-            aria-label="Toggle navigation"
-            aria-expanded={mobileOpen}
-            onClick={() => setMobileOpen((open) => !open)}
-            className={`
-              relative flex h-11 w-11 items-center justify-center rounded-full transition-all duration-300 md:hidden
-              ${isFloating 
-                ? "text-white/80 hover:bg-white/10 hover:text-white" 
-                : "text-ink-soft/80 hover:bg-stone-soft/80 hover:text-ink"
-              }
-              hover:scale-105 active:scale-95
-            `}
-          >
-            <MenuIcon open={mobileOpen} />
-          </button>
+            {/* User/Account */}
+            {user ? (
+              <a
+                href="/account"
+                aria-label="Your account"
+                className={`
+                  group relative flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-full transition-all duration-300
+                  ${isFloating 
+                    ? "hover:bg-white/10" 
+                    : "hover:bg-stone-soft/80"
+                  }
+                  hover:scale-105 active:scale-95
+                `}
+              >
+                <div className="relative">
+                  <div className={`
+                    absolute -inset-1 rounded-full blur-md transition-opacity duration-300
+                    ${isFloating ? "bg-white/20 opacity-0 group-hover:opacity-100" : "bg-brand/20 opacity-0 group-hover:opacity-100"}
+                  `} />
+                  <span className="relative flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-brand to-brand/80 text-xs font-bold text-white shadow-lg shadow-brand/30">
+                    {(user.user_metadata?.display_name || user.email || "?").charAt(0).toUpperCase()}
+                  </span>
+                </div>
+              </a>
+            ) : (
+              <button
+                type="button"
+                aria-label="Log in"
+                onClick={onAccountClick}
+                className={`
+                  group relative flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-full transition-all duration-300
+                  ${isFloating 
+                    ? "text-white/80 hover:bg-white/10 hover:text-white" 
+                    : "text-ink-soft/80 hover:bg-stone-soft/80 hover:text-ink"
+                  }
+                  hover:scale-105 active:scale-95
+                `}
+              >
+                <UserIcon className="h-5 w-5 transition-transform duration-300 group-hover:scale-110" />
+              </button>
+            )}
+
+            {/* Mobile Menu Toggle */}
+            <button
+              type="button"
+              aria-label="Toggle navigation"
+              aria-expanded={mobileOpen}
+              onClick={() => setMobileOpen((open) => !open)}
+              className={`
+                relative flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-full transition-all duration-300 md:hidden
+                ${isFloating 
+                  ? "text-white/80 hover:bg-white/10 hover:text-white" 
+                  : "text-ink-soft/80 hover:bg-stone-soft/80 hover:text-ink"
+                }
+                hover:scale-105 active:scale-95
+              `}
+            >
+              <MenuIcon open={mobileOpen} />
+            </button>
+          </div>
         </div>
-      </Container>
+      </header>
 
       {/* Mobile Navigation */}
       {mobileOpen && (
         <div className={`
-          border-t px-6 py-4 md:hidden animate-slideDown
+          pointer-events-auto mt-2 w-full max-w-7xl overflow-hidden rounded-3xl md:hidden animate-slideDown shadow-xl border
           ${isFloating 
             ? "border-white/10 bg-ink/95 backdrop-blur-xl" 
             : "border-stone/10 bg-cream/98 backdrop-blur-xl"
           }
         `}>
-          <nav className="mx-auto flex max-w-7xl flex-col gap-1">
+          <nav className="flex flex-col gap-1 p-4">
             {NAV_LINKS.map((link) => (
               <a
                 key={link.href}
@@ -227,7 +228,7 @@ export default function Header({ onAccountClick, floating = false }) {
           </nav>
         </div>
       )}
-    </header>
+    </div>
   );
 }
 

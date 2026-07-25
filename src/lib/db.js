@@ -12,6 +12,7 @@ function mapCategory(row) {
     icon: row.icon,
     imageURL: row.image_url || "",
     parentId: row.parent_id || null,
+    discountPercent: Number(row.discount_percent) || 0,
   };
 }
 
@@ -42,6 +43,7 @@ function mapProduct(row, modifiers = [], sizes = []) {
     isAvailable: row.is_available,
     modifiers: modifiers.map(mapModifier),
     sizes: sizes.map(mapProductSize),
+    discountPercent: Number(row.discount_percent) || 0,
   };
 }
 

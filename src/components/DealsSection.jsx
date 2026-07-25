@@ -7,6 +7,7 @@ import Reveal from "./Reveal";
 import Eyebrow from "./Eyebrow";
 import { formatCurrency } from "@/lib/currency";
 import { useCart } from "@/lib/cart-context";
+import { useToast } from "./Toast";
 
 export default function DealsSection({ deals, products }) {
   if (!deals || deals.length === 0) return null;
@@ -15,7 +16,7 @@ export default function DealsSection({ deals, products }) {
     <section id="deals" className="py-6 lg:py-10 bg-gradient-to-b from-cream-soft to-white">
       <Container>
         <Reveal className="text-center max-w-2xl mx-auto">
-          <Eyebrow className="justify-center">Meal Deals & Combos</Eyebrow>
+          <Eyebrow center>Meal Deals & Combos</Eyebrow>
           <h2 className="balance text-3xl font-bold text-ink sm:text-4xl">
             Perfect pairings, better value.
           </h2>
@@ -42,6 +43,7 @@ export default function DealsSection({ deals, products }) {
 
 function DealCard({ deal, products, style }) {
   const { addDeal } = useCart();
+  const toast = useToast();
   const [imgBroken, setImgBroken] = useState(false);
   const [added, setAdded] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -55,6 +57,7 @@ function DealCard({ deal, products, style }) {
       return `${qty}${name}${modNames}`;
     });
     addDeal(deal, includes);
+    toast(`${deal.title} added to cart`);
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
   };
@@ -86,8 +89,12 @@ function DealCard({ deal, products, style }) {
             onError={() => setImgBroken(true)}
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-char to-char-deep text-6xl opacity-30">
-            🍽️
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-char to-char-deep opacity-30">
+            <svg className="h-10 w-10 text-cream" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2" />
+              <path d="M7 2v20" />
+              <path d="M21 15V2v0a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" />
+            </svg>
           </div>
         )}
         

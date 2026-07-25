@@ -3,9 +3,11 @@
 import { useState } from "react";
 import { formatCurrency } from "@/lib/currency";
 import { useCart } from "@/lib/cart-context";
+import { useToast } from "./Toast";
 
 export default function ModifierModal({ product, onClose }) {
   const { addItem } = useCart();
+  const toast = useToast();
   const [selectedSize, setSelectedSize] = useState(null);
   const [selected, setSelected] = useState([]);
 
@@ -41,7 +43,10 @@ export default function ModifierModal({ product, onClose }) {
             onClick={onClose}
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-stone-soft text-ink transition hover:bg-stone"
           >
-            ✕
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
           </button>
         </div>
 
@@ -97,6 +102,7 @@ export default function ModifierModal({ product, onClose }) {
           type="button"
           onClick={() => {
             addItem(product, selected, "", selectedSize);
+            toast(`${product.name} added to cart`);
             onClose();
           }}
           className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-brand py-3.5 text-sm font-bold text-white transition hover:bg-brand-dark active:scale-[0.98]"

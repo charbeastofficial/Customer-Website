@@ -96,7 +96,7 @@ export default function AccountView() {
   };
 
   return (
-    <Container className="py-16 lg:py-24">
+    <Container className=" mt-10 py-16 lg:py-24">
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[340px_1fr]">
         {/* PROFILE CARD */}
         <div className="h-fit rounded-2xl border border-stone/20 bg-white p-6 shadow-sm ring-1 ring-stone/5">

@@ -41,7 +41,7 @@ export default function MenuSection({ categories, products }) {
         <div className="mt-12 flex gap-4 overflow-x-auto p-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <CategoryCard
             label="All Dishes"
-            icon="🍽️"
+            icon={<AllDishesIcon />}
             active={activeCategory === "all"}
             onClick={() => setActiveCategory("all")}
             style={{ animationDelay: "0ms" }}
@@ -60,12 +60,16 @@ export default function MenuSection({ categories, products }) {
         </div>
 
         {filteredProducts.length === 0 ? (
-          <div className="mt-16 flex flex-col items-center gap-2 rounded-3xl border border-dashed border-stone py-20 text-center text-ink-soft">
-            <span className="text-3xl">🔍</span>
-            No dishes in this category right now.
+          <div className="mt-16 flex flex-col items-center gap-3 rounded-3xl border border-dashed border-stone py-20 text-center text-ink-soft">
+            <svg className="h-8 w-8 text-stone" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.35-4.35" />
+              <path d="M8 11h6" />
+            </svg>
+            <span className="text-sm">No dishes in this category right now.</span>
           </div>
         ) : (
-          <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+          <div className="mt-10 grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">
             {filteredProducts.map((product, i) => (
               <ProductCard
                 key={product.id}
@@ -81,6 +85,16 @@ export default function MenuSection({ categories, products }) {
 
       <ModifierModal product={customizeProduct} onClose={() => setCustomizeProduct(null)} />
     </section>
+  );
+}
+
+function AllDishesIcon() {
+  return (
+    <svg className="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2" />
+      <path d="M7 2v20" />
+      <path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" />
+    </svg>
   );
 }
 
@@ -119,8 +133,8 @@ function CategoryCard({ label, icon, image, active, onClick, style }) {
               onError={() => setBroken(true)} 
             />
           ) : (
-            <span className="transition-transform duration-300 group-hover:scale-110">
-              {icon}
+            <span className="flex items-center justify-center transition-transform duration-300 group-hover:scale-110">
+              {typeof icon === "string" ? icon : icon}
             </span>
           )}
         </span>
