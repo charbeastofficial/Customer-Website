@@ -26,7 +26,7 @@ export default function HomeView({
 
   return (
     <>
-      <Header onAccountClick={() => setAuthOpen(true)} />
+      <Header onAccountClick={() => setAuthOpen(true)} floating />
       <main>
         <Hero
           heroMode={heroMode}

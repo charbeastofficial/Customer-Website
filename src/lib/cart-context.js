@@ -1,12 +1,42 @@
 "use client";
 
-import { createContext, useContext, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 const CartContext = createContext(null);
+const CART_STORAGE_KEY = "charbeast_cart";
+
+function loadStoredCart() {
+  try {
+    const raw = localStorage.getItem(CART_STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    // private browsing, corrupted JSON, etc. -- start with an empty cart
+    return [];
+  }
+}
 
 export function CartProvider({ children }) {
+  // Starts empty (matches server-rendered markup) and hydrates from
+  // localStorage after mount, so a page refresh doesn't silently empty an
+  // in-progress order without triggering a hydration mismatch.
   const [items, setItems] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    setItems(loadStoredCart());
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    try {
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+    } catch {
+      // private browsing etc. -- cart just won't persist across reloads
+    }
+  }, [items, hydrated]);
 
   const addItem = (product, modifiers = [], note = "", size = null) => {
     const sizeId = size ? `-${size.id}` : "";

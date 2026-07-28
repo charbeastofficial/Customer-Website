@@ -38,25 +38,29 @@ export default function MenuSection({ categories, products }) {
           </p>
         </Reveal>
 
-        <div className="mt-12 flex gap-4 overflow-x-auto p-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <CategoryCard
-            label="All Dishes"
-            icon={<AllDishesIcon />}
-            active={activeCategory === "all"}
-            onClick={() => setActiveCategory("all")}
-            style={{ animationDelay: "0ms" }}
-          />
-          {topCategories.map((cat, i) => (
+        <div className="relative mt-12">
+          <div className="flex gap-4 overflow-x-auto p-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <CategoryCard
-              key={cat.id}
-              label={cat.name}
-              icon={cat.icon}
-              image={cat.imageURL}
-              active={activeCategory === cat.id}
-              onClick={() => setActiveCategory(cat.id)}
-              style={{ animationDelay: `${(i + 1) * 50}ms` }}
+              label="All Dishes"
+              icon={<AllDishesIcon />}
+              active={activeCategory === "all"}
+              onClick={() => setActiveCategory("all")}
+              style={{ animationDelay: "0ms" }}
             />
-          ))}
+            {topCategories.map((cat, i) => (
+              <CategoryCard
+                key={cat.id}
+                label={cat.name}
+                icon={cat.icon}
+                image={cat.imageURL}
+                active={activeCategory === cat.id}
+                onClick={() => setActiveCategory(cat.id)}
+                style={{ animationDelay: `${(i + 1) * 50}ms` }}
+              />
+            ))}
+          </div>
+          {/* Fade hint so it's clear the row scrolls when categories overflow */}
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-cream-soft to-transparent" />
         </div>
 
         {filteredProducts.length === 0 ? (
@@ -118,7 +122,7 @@ function CategoryCard({ label, icon, image, active, onClick, style }) {
         <span
           className={`relative flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl text-3xl shadow-sm transition-all duration-300 ${
             active
-              ? "scale-110 bg-gradient-to-br from-brand to-brand/80 text-white shadow-[0_12px_32px_-12px_rgba(251,74,54,0.5)] ring-2 ring-brand/20 ring-offset-2 ring-offset-cream-soft"
+              ? "scale-110 bg-brand text-white shadow-[0_12px_32px_-12px_rgba(194,65,12,0.5)] ring-2 ring-brand/20 ring-offset-2 ring-offset-cream-soft"
               : "bg-white/80 backdrop-blur-sm ring-1 ring-stone/20 hover:scale-105 hover:shadow-md hover:ring-brand/30 group-hover:bg-white"
           }`}
         >

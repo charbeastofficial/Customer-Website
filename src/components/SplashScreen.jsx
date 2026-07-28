@@ -1,23 +1,24 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function SplashScreen({ children }) {
   const [phase, setPhase] = useState("enter");
-  const [show, setShow] = useState(true);
-  const shownRef = useRef(false);
+  const [show, setShow] = useState(() => !sessionStorage.getItem("charbeast_splash_shown"));
 
   useEffect(() => {
-    if (shownRef.current) { setShow(false); return; }
-    shownRef.current = true;
+    if (!show) return;
+    // Mark it shown immediately (not just when it finishes) so a quick
+    // reload/navigation mid-animation still won't replay it this session.
+    sessionStorage.setItem("charbeast_splash_shown", "1");
     const enterTimer = setTimeout(() => setPhase("exit"), 1200);
     const removeTimer = setTimeout(() => setShow(false), 2000);
     return () => {
       clearTimeout(enterTimer);
       clearTimeout(removeTimer);
     };
-  }, []);
+  }, [show]);
 
   if (!show) return children;
 

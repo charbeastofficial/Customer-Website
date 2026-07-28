@@ -46,7 +46,7 @@ export default function LeafletMap({ center, marker, onPick, shopCenter, radiusK
         <Circle
           center={shopCenter}
           radius={radiusKm * 1000}
-          pathOptions={{ color: "#fb4a36", fillColor: "#fb4a36", fillOpacity: 0.08, weight: 1.5 }}
+          pathOptions={{ color: "#c2410c", fillColor: "#c2410c", fillOpacity: 0.08, weight: 1.5 }}
         />
       )}
       {marker && <Marker position={marker} icon={pin} />}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { formatCurrency } from "@/lib/currency";
 import { useCart } from "@/lib/cart-context";
 import { useToast } from "./Toast";
@@ -10,6 +10,15 @@ export default function ModifierModal({ product, onClose }) {
   const toast = useToast();
   const [selectedSize, setSelectedSize] = useState(null);
   const [selected, setSelected] = useState([]);
+
+  useEffect(() => {
+    if (!product) return;
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [product, onClose]);
 
   if (!product) return null;
 
@@ -30,12 +39,15 @@ export default function ModifierModal({ product, onClose }) {
       onClick={onClose}
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modifier-modal-title"
         className="w-full max-w-sm animate-[fadeUp_0.2s_ease-out] rounded-3xl bg-white p-6 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h3 className="text-lg font-bold text-ink">{product.name}</h3>
+            <h3 id="modifier-modal-title" className="text-lg font-bold text-ink">{product.name}</h3>
             <p className="mt-0.5 text-sm text-ink-soft">{product.description}</p>
           </div>
           <button

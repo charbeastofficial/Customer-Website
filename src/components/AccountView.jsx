@@ -135,7 +135,7 @@ export default function AccountView() {
               className={`flex w-full items-center justify-center gap-2 rounded-full py-2.5 text-sm font-bold text-white transition active:scale-[0.98] disabled:opacity-60 ${
                 saved 
                   ? "bg-green-500 hover:bg-green-600" 
-                  : "bg-gradient-to-r from-brand to-brand-dark hover:shadow-lg hover:shadow-brand/30"
+                  : "bg-brand hover:bg-brand-dark hover:shadow-lg hover:shadow-brand/30"
               }`}
             >
               {saving ? (
@@ -222,6 +222,9 @@ export default function AccountView() {
                         <span>{STATUS_ICON[order.status] || "📦"}</span>
                         {order.status}
                       </span>
+                      {order.status === "Cancelled" && order.cancelReason && (
+                        <span className="text-[10px] text-red-400 italic">— {order.cancelReason}</span>
+                      )}
                     </div>
                     <span className="text-xs text-ink-soft/60">
                       {new Date(order.createdAt).toLocaleString([], { 

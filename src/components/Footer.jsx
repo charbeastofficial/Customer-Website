@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import Container from "./Container";
 import Reveal from "./Reveal";
@@ -93,14 +94,18 @@ export default function Footer() {
             <div className="flex flex-col items-center text-center md:items-start md:text-left">
               <h4 className="text-sm font-bold tracking-widest text-white uppercase mb-6">Explore</h4>
               <ul className="flex flex-col gap-4">
-                {LINKS.map((link) => (
-                  <li key={link.href}>
-                    <a href={link.href} className="group flex items-center gap-3 text-sm text-cream/70 transition-colors hover:text-white">
-                      <span className="h-[2px] w-4 bg-brand/50 transition-all duration-300 group-hover:w-6 group-hover:bg-brand" />
-                      {link.label}
-                    </a>
-                  </li>
-                ))}
+                {LINKS.map((link) => {
+                  const isHashLink = link.href.startsWith("/#");
+                  const LinkTag = isHashLink ? "a" : Link;
+                  return (
+                    <li key={link.href}>
+                      <LinkTag href={link.href} className="group flex items-center gap-3 text-sm text-cream/70 transition-colors hover:text-white">
+                        <span className="h-[2px] w-4 bg-brand/50 transition-all duration-300 group-hover:w-6 group-hover:bg-brand" />
+                        {link.label}
+                      </LinkTag>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           </Reveal>

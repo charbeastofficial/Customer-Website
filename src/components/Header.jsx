@@ -78,29 +78,33 @@ export default function Header({ onAccountClick, floating = false }) {
 
           {/* Desktop Navigation */}
           <nav className="hidden items-center gap-8 md:flex">
-            {NAV_LINKS.map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
-                onClick={() => setActive(link.href)}
-                className={`
-                  relative py-2 text-sm font-medium transition-all duration-300
-                  ${activeHref === link.href
-                    ? "text-brand"
-                    : isFloating
-                      ? "text-white/70 hover:text-white"
-                      : "text-ink-soft/80 hover:text-ink"
-                  }
-                  before:absolute before:-bottom-1 before:left-0 before:h-[2px] before:rounded-full before:transition-all before:duration-300
-                  ${activeHref === link.href
-                    ? "before:w-full before:bg-brand"
-                    : "before:w-0 hover:before:w-full hover:before:bg-brand/50"
-                  }
-                `}
-              >
-                {link.label}
-              </a>
-            ))}
+            {NAV_LINKS.map((link) => {
+              const isHashLink = link.href.startsWith("/#");
+              const LinkTag = isHashLink ? "a" : Link;
+              return (
+                <LinkTag
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setActive(link.href)}
+                  className={`
+                    relative py-2 text-sm font-medium transition-all duration-300
+                    ${activeHref === link.href
+                      ? "text-brand"
+                      : isFloating
+                        ? "text-white/70 hover:text-white"
+                        : "text-ink-soft/80 hover:text-ink"
+                    }
+                    before:absolute before:-bottom-1 before:left-0 before:h-[2px] before:rounded-full before:transition-all before:duration-300
+                    ${activeHref === link.href
+                      ? "before:w-full before:bg-brand"
+                      : "before:w-0 hover:before:w-full hover:before:bg-brand/50"
+                    }
+                  `}
+                >
+                  {link.label}
+                </LinkTag>
+              );
+            })}
           </nav>
 
           {/* Right Actions */}
@@ -129,13 +133,13 @@ export default function Header({ onAccountClick, floating = false }) {
 
             {/* User/Account */}
             {user ? (
-              <a
+              <Link
                 href="/account"
                 aria-label="Your account"
                 className={`
                   group relative flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-full transition-all duration-300
-                  ${isFloating 
-                    ? "hover:bg-white/10" 
+                  ${isFloating
+                    ? "hover:bg-white/10"
                     : "hover:bg-stone-soft/80"
                   }
                   hover:scale-105 active:scale-95
@@ -150,7 +154,7 @@ export default function Header({ onAccountClick, floating = false }) {
                     {(user.user_metadata?.display_name || user.email || "?").charAt(0).toUpperCase()}
                   </span>
                 </div>
-              </a>
+              </Link>
             ) : (
               <button
                 type="button"
@@ -200,31 +204,35 @@ export default function Header({ onAccountClick, floating = false }) {
           }
         `}>
           <nav className="flex flex-col gap-1 p-4">
-            {NAV_LINKS.map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
-                onClick={() => { 
-                  setActive(link.href); 
-                  setMobileOpen(false); 
-                }}
-                className={`
-                  rounded-xl px-4 py-3.5 text-sm font-semibold transition-all duration-300
-                  ${activeHref === link.href
-                    ? "bg-brand/10 text-brand"
-                    : isFloating
-                      ? "text-white/70 hover:bg-white/5 hover:text-white"
-                      : "text-ink-soft/80 hover:bg-stone-soft/50 hover:text-ink"
-                  }
-                  active:scale-95
-                `}
-              >
-                <span className="flex items-center gap-3">
-                  <span className="h-1.5 w-1.5 rounded-full bg-brand/60" />
-                  {link.label}
-                </span>
-              </a>
-            ))}
+            {NAV_LINKS.map((link) => {
+              const isHashLink = link.href.startsWith("/#");
+              const LinkTag = isHashLink ? "a" : Link;
+              return (
+                <LinkTag
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => {
+                    setActive(link.href);
+                    setMobileOpen(false);
+                  }}
+                  className={`
+                    rounded-xl px-4 py-3.5 text-sm font-semibold transition-all duration-300
+                    ${activeHref === link.href
+                      ? "bg-brand/10 text-brand"
+                      : isFloating
+                        ? "text-white/70 hover:bg-white/5 hover:text-white"
+                        : "text-ink-soft/80 hover:bg-stone-soft/50 hover:text-ink"
+                    }
+                    active:scale-95
+                  `}
+                >
+                  <span className="flex items-center gap-3">
+                    <span className="h-1.5 w-1.5 rounded-full bg-brand/60" />
+                    {link.label}
+                  </span>
+                </LinkTag>
+              );
+            })}
           </nav>
         </div>
       )}

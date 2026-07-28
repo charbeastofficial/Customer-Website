@@ -5,6 +5,7 @@ import { useCart } from "@/lib/cart-context";
 import { useAuth } from "@/lib/auth-context";
 import { formatCurrency } from "@/lib/currency";
 import { db } from "@/lib/db";
+import { distanceKm } from "@/lib/geo";
 import LocationPicker from "./LocationPicker";
 import { useToast } from "./Toast";
 
@@ -33,22 +34,65 @@ export default function CartDrawer({ taxRate, onRequireLogin }) {
 
   const [orderType, setOrderType] = useState("Takeaway");
   const [deliveryLocation, setDeliveryLocation] = useState(null);
-  const [customerName, setCustomerName] = useState("");
-  const [customerPhone, setCustomerPhone] = useState("");
+  const [customerName, setCustomerName] = useState(user?.user_metadata?.display_name || "");
+  const [customerPhone, setCustomerPhone] = useState(user?.user_metadata?.phone || "");
   const [placing, setPlacing] = useState(false);
   const [error, setError] = useState("");
   const [trackedOrderId, setTrackedOrderId] = useState(null);
   const [trackedOrder, setTrackedOrder] = useState(null);
   const [confirmRemoveId, setConfirmRemoveId] = useState(null);
-  const [deliverySettings, setDeliverySettings] = useState({ shopLat: null, shopLng: null, deliveryRadiusKm: 5 });
+  const [deliverySettings, setDeliverySettings] = useState({
+    shopLat: null, shopLng: null, deliveryRadiusKm: 5,
+    deliveryFreeMinAmount: 0, deliveryFreeMaxDistance: 0,
+    deliveryBaseFee: 0, deliveryPerKmRate: 0, deliveryMaxDistance: 0,
+    deliveryChargeType: 'per_km',
+  });
+  const [deliveryZones, setDeliveryZones] = useState([]);
+  const [deliveryAreas, setDeliveryAreas] = useState([]);
+  const [selectedArea, setSelectedArea] = useState(null);
+
+  const deliveryDistance = orderType === "Delivery" && deliveryLocation?.lat != null && deliverySettings.shopLat != null
+    ? distanceKm(deliveryLocation.lat, deliveryLocation.lng, deliverySettings.shopLat, deliverySettings.shopLng)
+    : null;
+
+  const deliveryFee = (() => {
+    if (orderType !== "Delivery") return 0;
+    if (deliverySettings.deliveryChargeType === 'area') {
+      if (!selectedArea) return 0;
+      return selectedArea.charge;
+    }
+    if (deliveryDistance == null) return 0;
+    if (deliverySettings.deliveryFreeMinAmount > 0 && subtotal >= deliverySettings.deliveryFreeMinAmount) return 0;
+    if (deliverySettings.deliveryFreeMaxDistance > 0 && deliveryDistance <= deliverySettings.deliveryFreeMaxDistance) return 0;
+
+    if (deliverySettings.deliveryChargeType === 'tiered') {
+      const match = deliveryZones.find((z) => deliveryDistance >= z.minKm && deliveryDistance <= z.maxKm);
+      return match ? match.charge : (Number(deliverySettings.deliveryBaseFee) || 0);
+    }
+
+    const baseFee = Number(deliverySettings.deliveryBaseFee) || 0;
+    const perKmRate = Number(deliverySettings.deliveryPerKmRate) || 0;
+    const chargeableKm = Math.max(0, deliveryDistance - (deliverySettings.deliveryFreeMaxDistance || 0));
+    return baseFee + chargeableKm * perKmRate;
+  })();
 
   const tax = subtotal * taxRate;
-  const total = subtotal + tax;
+  const total = subtotal + tax + deliveryFee;
 
   useEffect(() => {
     db.getSiteSettings()
-      .then((s) => setDeliverySettings({ shopLat: s.shopLat, shopLng: s.shopLng, deliveryRadiusKm: s.deliveryRadiusKm }))
+      .then((s) => setDeliverySettings({
+        shopLat: s.shopLat, shopLng: s.shopLng, deliveryRadiusKm: s.deliveryRadiusKm,
+        deliveryFreeMinAmount: s.deliveryFreeMinAmount || 0,
+        deliveryFreeMaxDistance: s.deliveryFreeMaxDistance || 0,
+        deliveryBaseFee: s.deliveryBaseFee || 0,
+        deliveryPerKmRate: s.deliveryPerKmRate || 0,
+        deliveryMaxDistance: s.deliveryMaxDistance || 0,
+        deliveryChargeType: s.deliveryChargeType || 'per_km',
+      }))
       .catch(() => {});
+    db.getDeliveryZones().then(setDeliveryZones).catch(() => {});
+    db.getDeliveryAreas().then(setDeliveryAreas).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -84,6 +128,16 @@ export default function CartDrawer({ taxRate, onRequireLogin }) {
 
   const close = () => setIsOpen(false);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") close();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
+
   const handlePlaceOrder = async () => {
     if (!user) {
       onRequireLogin();
@@ -114,6 +168,7 @@ export default function CartDrawer({ taxRate, onRequireLogin }) {
         deliveryAddress: orderType === "Delivery" ? deliveryLocation.address : "",
         deliveryLat: orderType === "Delivery" ? deliveryLocation.lat : null,
         deliveryLng: orderType === "Delivery" ? deliveryLocation.lng : null,
+        deliveryFee: parseFloat(deliveryFee.toFixed(2)),
         totalAmount: parseFloat(total.toFixed(2)),
         items: items.map((item) =>
           item.isDeal
@@ -161,11 +216,11 @@ export default function CartDrawer({ taxRate, onRequireLogin }) {
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
       <div className="absolute inset-0 animate-[fadeIn_0.2s_ease-out] bg-ink/60 backdrop-blur-sm" onClick={close} />
-      <div className="relative flex h-full w-full max-w-md animate-[slideIn_0.25s_ease-out] flex-col bg-cream shadow-2xl">
+      <div role="dialog" aria-modal="true" aria-labelledby="cart-drawer-title" className="relative flex h-full w-full max-w-md animate-[slideIn_0.25s_ease-out] flex-col bg-cream shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-stone/70 px-6 py-5 bg-white/50 backdrop-blur-sm">
           <div className="flex items-center gap-3">
-            <h2 className="text-lg font-bold text-ink">
+            <h2 id="cart-drawer-title" className="text-lg font-bold text-ink">
               {showTrackedOrder ? "Your Order" : "Your Cart"}
             </h2>
             {!showTrackedOrder && items.length > 0 && (
@@ -307,6 +362,24 @@ export default function CartDrawer({ taxRate, onRequireLogin }) {
                   </div>
                   {orderType === "Delivery" && (
                     <div className="mt-3">
+                      {deliverySettings.deliveryChargeType === 'area' && deliveryAreas.length > 0 && (
+                        <div className="mb-3">
+                          <p className="mb-1.5 text-xs font-semibold text-ink-soft">Select your area</p>
+                          <select
+                            className="w-full rounded-xl border border-stone/30 bg-white px-3.5 py-2.5 text-sm text-ink transition focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/10"
+                            value={selectedArea?.id || ''}
+                            onChange={(e) => {
+                              const area = deliveryAreas.find((a) => a.id === e.target.value);
+                              setSelectedArea(area || null);
+                            }}
+                          >
+                            <option value="">-- Choose your area --</option>
+                            {deliveryAreas.map((area) => (
+                              <option key={area.id} value={area.id}>{area.name} — Rs {area.charge}</option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
                       <p className="mb-2 text-xs text-ink-soft flex items-center gap-1">
                         <svg className="h-3.5 w-3.5 shrink-0 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
@@ -376,6 +449,12 @@ export default function CartDrawer({ taxRate, onRequireLogin }) {
                   <span>Tax</span>
                   <span>{formatCurrency(tax)}</span>
                 </div>
+                {orderType === "Delivery" && (
+                  <div className="flex justify-between text-ink-soft">
+                    <span>Delivery Fee</span>
+                    <span>{deliveryFee > 0 ? formatCurrency(deliveryFee) : <span className="text-green-600 font-medium">Free</span>}</span>
+                  </div>
+                )}
                 <div className="mt-1 flex justify-between border-t border-dashed border-stone/50 pt-2 text-base font-bold text-ink">
                   <span>Total</span>
                   <span className="text-brand text-lg">{formatCurrency(total)}</span>
@@ -385,9 +464,13 @@ export default function CartDrawer({ taxRate, onRequireLogin }) {
               {user ? (
                 <button
                   type="button"
-                  disabled={placing || (orderType === "Delivery" && (!deliveryLocation || !deliveryLocation.withinRadius))}
+                  disabled={placing || (orderType === "Delivery" && (
+                    deliverySettings.deliveryChargeType === 'area'
+                      ? !selectedArea || !deliveryLocation
+                      : !deliveryLocation || !deliveryLocation.withinRadius
+                  ))}
                   onClick={handlePlaceOrder}
-                  className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-brand to-brand-dark py-3.5 text-sm font-bold text-white transition hover:shadow-lg hover:shadow-brand/30 active:scale-[0.98] disabled:opacity-60"
+                  className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-brand py-3.5 text-sm font-bold text-white transition hover:bg-brand-dark hover:shadow-lg hover:shadow-brand/30 active:scale-[0.98] disabled:opacity-60"
                 >
                   {placing ? (
                     <>
@@ -515,6 +598,9 @@ function OrderTracker({ order, user, onClose }) {
           {isCompleted ? "Enjoyed your order?" : "Thanks, it's on the grill!"}
         </h3>
         <p className="mt-1.5 text-sm text-ink-soft">{STATUS_LABEL[order.status] || "We've got your order."}</p>
+        {order.status === "Cancelled" && order.cancelReason && (
+          <p className="mt-2 text-sm font-medium text-red-500">Reason: {order.cancelReason}</p>
+        )}
       </div>
 
       {/* Status Progress */}
@@ -633,7 +719,7 @@ function ReviewForm({ order, user, onSubmitted }) {
         type="button"
         disabled={submitting}
         onClick={handleSubmit}
-        className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-brand to-brand-dark py-2.5 text-sm font-bold text-white transition hover:shadow-lg hover:shadow-brand/30 active:scale-[0.98] disabled:opacity-60"
+        className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-brand py-2.5 text-sm font-bold text-white transition hover:bg-brand-dark hover:shadow-lg hover:shadow-brand/30 active:scale-[0.98] disabled:opacity-60"
       >
         {submitting ? (
           <>

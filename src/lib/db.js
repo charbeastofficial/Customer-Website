@@ -86,11 +86,13 @@ function mapOrder(row, items = []) {
     customerPhone: row.customer_phone,
     status: row.status,
     totalAmount: Number(row.total_amount),
+    deliveryFee: Number(row.delivery_fee) || 0,
     orderType: row.order_type,
     paymentMethod: row.payment_method,
     deliveryAddress: row.delivery_address || "",
     deliveryLat: row.delivery_lat ?? null,
     deliveryLng: row.delivery_lng ?? null,
+    cancelReason: row.cancel_reason || "",
     isPaid: row.is_paid,
     source: row.source,
     createdAt: row.created_at,
@@ -174,6 +176,12 @@ export const db = {
       shopLat: settings.shop_lat ? parseFloat(settings.shop_lat) : null,
       shopLng: settings.shop_lng ? parseFloat(settings.shop_lng) : null,
       deliveryRadiusKm: settings.delivery_radius_km !== undefined ? parseFloat(settings.delivery_radius_km) : 5,
+      deliveryFreeMinAmount: settings.delivery_free_min_amount !== undefined ? parseFloat(settings.delivery_free_min_amount) : 0,
+      deliveryFreeMaxDistance: settings.delivery_free_max_distance !== undefined ? parseFloat(settings.delivery_free_max_distance) : 0,
+      deliveryBaseFee: settings.delivery_base_fee !== undefined ? parseFloat(settings.delivery_base_fee) : 0,
+      deliveryPerKmRate: settings.delivery_per_km_rate !== undefined ? parseFloat(settings.delivery_per_km_rate) : 0,
+      deliveryMaxDistance: settings.delivery_max_distance !== undefined ? parseFloat(settings.delivery_max_distance) : 0,
+      deliveryChargeType: settings.delivery_charge_type || "per_km",
       contactPhone: settings.contact_phone || "",
       contactEmail: settings.contact_email || "",
       contactAddress: settings.contact_address || "",
@@ -216,6 +224,7 @@ export const db = {
       customer_phone: orderFields.customerPhone || "",
       status: "Pending",
       total_amount: orderFields.totalAmount,
+      delivery_fee: orderFields.deliveryFee || 0,
       order_type: orderFields.orderType,
       payment_method: "Cash",
       delivery_address: orderFields.orderType === "Delivery" ? orderFields.deliveryAddress || "" : "",
@@ -267,6 +276,28 @@ export const db = {
     const { data, error } = await supabase.from("reviews").select("id").eq("order_id", orderId).maybeSingle();
     if (error) throw error;
     return !!data;
+  },
+
+  async getDeliveryZones() {
+    const { data, error } = await supabase.from("delivery_zones").select("*").order("sort_order");
+    if (error) throw error;
+    return (data || []).map((row) => ({
+      id: row.id,
+      name: row.name,
+      minKm: Number(row.min_km),
+      maxKm: Number(row.max_km),
+      charge: Number(row.charge),
+    }));
+  },
+
+  async getDeliveryAreas() {
+    const { data, error } = await supabase.from("delivery_areas").select("*").order("sort_order");
+    if (error) throw error;
+    return (data || []).map((row) => ({
+      id: row.id,
+      name: row.name,
+      charge: Number(row.charge),
+    }));
   },
 
   async submitReview({ orderId, customerId, customerName, rating, comment }) {

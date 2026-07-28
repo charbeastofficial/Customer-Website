@@ -170,7 +170,7 @@ function DealCard({ deal, products, style }) {
               text-[11px] font-bold tracking-wide uppercase transition-all duration-300
               ${added 
                 ? "bg-green-500 text-white shadow-lg shadow-green-500/30" 
-                : "bg-gradient-to-r from-brand to-brand-dark text-white shadow-lg shadow-brand/30 hover:shadow-brand/50 hover:scale-105"
+                : "bg-brand text-white shadow-lg shadow-brand/30 hover:bg-brand-dark hover:shadow-brand/50 hover:scale-105"
               }
               active:scale-95
             `}
