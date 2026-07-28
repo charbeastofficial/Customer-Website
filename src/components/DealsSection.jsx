@@ -7,9 +7,11 @@ import Reveal from "./Reveal";
 import Eyebrow from "./Eyebrow";
 import { formatCurrency } from "@/lib/currency";
 import { useCart } from "@/lib/cart-context";
-import { useToast } from "./Toast";
+import DealDetailModal from "./DealDetailModal";
 
 export default function DealsSection({ deals, products }) {
+  const [customizeDeal, setCustomizeDeal] = useState(null);
+
   if (!deals || deals.length === 0) return null;
 
   return (
@@ -21,46 +23,41 @@ export default function DealsSection({ deals, products }) {
             Perfect pairings, better value.
           </h2>
           <p className="mt-3 text-sm text-ink-soft">
-            Get more of what you love with our hand-picked meal combos. 
+            Get more of what you love with our hand-picked meal combos.
             Big flavour, generous portions, and your next easy decision.
           </p>
         </Reveal>
 
         <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {deals.map((deal, i) => (
-            <DealCard 
-              key={deal.id} 
-              deal={deal} 
-              products={products} 
-              style={{ animationDelay: `${i * 60}ms` }} 
+            <DealCard
+              key={deal.id}
+              deal={deal}
+              products={products}
+              onCustomize={() => setCustomizeDeal(deal)}
+              style={{ animationDelay: `${i * 60}ms` }}
             />
           ))}
         </div>
       </Container>
+
+      <DealDetailModal
+        deal={customizeDeal}
+        products={products}
+        onClose={() => setCustomizeDeal(null)}
+      />
     </section>
   );
 }
 
-function DealCard({ deal, products, style }) {
-  const { addDeal } = useCart();
-  const toast = useToast();
+function DealCard({ deal, products, onCustomize, style }) {
+  const { items, updateQuantity } = useCart();
   const [imgBroken, setImgBroken] = useState(false);
-  const [added, setAdded] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 
-  const handleAdd = () => {
-    const includes = deal.items.map((item) => {
-      const product = products.find((p) => p.id === item.productId);
-      const name = product?.name || "Item";
-      const modNames = item.modifierNames?.length ? ` (${item.modifierNames.join(", ")})` : "";
-      const qty = item.quantity > 1 ? `${item.quantity}x ` : "";
-      return `${qty}${name}${modNames}`;
-    });
-    addDeal(deal, includes);
-    toast(`${deal.title} added to cart`);
-    setAdded(true);
-    setTimeout(() => setAdded(false), 2000);
-  };
+  // Mirrors ProductCard: a deal already in the cart shows a quick +/-
+  // stepper instead of the "Add Bundle" button, which reopens the dialog.
+  const cartItem = items.find((item) => item.cartItemId === `deal-${deal.id}`);
 
   // Calculate total items and savings
   const totalItems = deal.items.reduce((sum, item) => sum + item.quantity, 0);
@@ -78,7 +75,12 @@ function DealCard({ deal, products, style }) {
       className="group relative flex animate-[fadeUp_0.5s_ease-out_backwards] flex-col overflow-hidden rounded-2xl bg-white shadow-lg shadow-ink/5 ring-1 ring-stone/20 transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:shadow-brand/10 hover:ring-brand/30"
     >
       {/* Image Section - No pills on image */}
-      <div className="relative aspect-[16/10] w-full overflow-hidden bg-char-deep">
+      <button
+        type="button"
+        onClick={onCustomize}
+        aria-label={`View ${deal.title}`}
+        className="relative aspect-[16/10] w-full overflow-hidden bg-char-deep text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+      >
         {deal.imageURL && !imgBroken ? (
           <Image
             src={deal.imageURL}
@@ -97,10 +99,10 @@ function DealCard({ deal, products, style }) {
             </svg>
           </div>
         )}
-        
+
         {/* Gradient Overlay */}
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-white/90 via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-      </div>
+      </button>
 
       {/* Content Section */}
       <div className="flex flex-1 flex-col p-5">
@@ -162,40 +164,43 @@ function DealCard({ deal, products, style }) {
             )}
           </div>
           
-          <button
-            type="button"
-            onClick={handleAdd}
-            className={`
-              group/btn relative flex items-center gap-2 overflow-hidden rounded-full px-5 py-2.5 
-              text-[11px] font-bold tracking-wide uppercase transition-all duration-300
-              ${added 
-                ? "bg-green-500 text-white shadow-lg shadow-green-500/30" 
-                : "bg-brand text-white shadow-lg shadow-brand/30 hover:bg-brand-dark hover:shadow-brand/50 hover:scale-105"
-              }
-              active:scale-95
-            `}
-          >
-            <span className="relative z-10 flex items-center gap-2">
-              {added ? (
-                <>
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                  </svg>
-                  Added!
-                </>
-              ) : (
-                <>
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                  Add Bundle
-                </>
-              )}
-            </span>
-            {!added && (
+          {cartItem ? (
+            <div className="flex items-center gap-3 rounded-full border border-stone bg-cream-soft px-2 py-1.5 shadow-inner">
+              <button
+                type="button"
+                onClick={() => updateQuantity(cartItem.cartItemId, -1)}
+                className="flex h-7 w-7 items-center justify-center rounded-full text-ink-soft transition hover:bg-white hover:text-ink active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+              >
+                <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5} strokeLinecap="round">
+                  <path d="M20 12H4" />
+                </svg>
+              </button>
+              <span className="w-5 text-center text-sm font-bold text-ink">{cartItem.quantity}</span>
+              <button
+                type="button"
+                onClick={() => updateQuantity(cartItem.cartItemId, 1)}
+                className="flex h-7 w-7 items-center justify-center rounded-full bg-brand text-white transition hover:bg-brand-dark hover:scale-105 active:scale-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+              >
+                <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5} strokeLinecap="round">
+                  <path d="M12 4v16m8-8H4" />
+                </svg>
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={onCustomize}
+              className="group/btn relative flex items-center gap-2 overflow-hidden rounded-full bg-brand px-5 py-2.5 text-[11px] font-bold tracking-wide uppercase text-white shadow-lg shadow-brand/30 transition-all duration-300 hover:scale-105 hover:bg-brand-dark hover:shadow-brand/50 active:scale-95"
+            >
+              <span className="relative z-10 flex items-center gap-2">
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Add Bundle
+              </span>
               <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-500 group-hover/btn:translate-x-full" />
-            )}
-          </button>
+            </button>
+          )}
         </div>
       </div>
 

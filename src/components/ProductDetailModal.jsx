@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { formatCurrency } from "@/lib/currency";
+import { sizeAbbreviation } from "@/lib/sizeLabel";
 import { useCart } from "@/lib/cart-context";
 import { useToast } from "./Toast";
 
@@ -166,17 +167,22 @@ export default function ProductDetailModal({ product, category, onClose }) {
                       type="button"
                       key={size.id}
                       onClick={() => setSelectedSize(size)}
-                      className={`rounded-lg border px-4 py-2 text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ${
+                      title={size.name}
+                      aria-label={size.name}
+                      className={`flex h-12 w-12 items-center justify-center rounded-xl border text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand ${
                         isActive
                           ? "border-brand bg-brand text-white"
                           : "border-stone bg-cream-soft text-ink hover:border-brand/40"
                       }`}
                     >
-                      {size.name}
+                      {sizeAbbreviation(size.name)}
                     </button>
                   );
                 })}
               </div>
+              {selectedSize && (
+                <p className="mt-1.5 text-xs text-ink-soft/60">{selectedSize.name}</p>
+              )}
             </div>
           )}
 

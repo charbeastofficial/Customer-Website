@@ -7,6 +7,7 @@ import { formatCurrency } from "@/lib/currency";
 import { db } from "@/lib/db";
 import { distanceKm } from "@/lib/geo";
 import LocationPicker from "./LocationPicker";
+import OrderSuccessOverlay from "./OrderSuccessOverlay";
 import { useToast } from "./Toast";
 
 const LAST_ORDER_KEY = "charbeast_last_order_id";
@@ -40,6 +41,7 @@ export default function CartDrawer({ taxRate, onRequireLogin }) {
   const [error, setError] = useState("");
   const [trackedOrderId, setTrackedOrderId] = useState(null);
   const [trackedOrder, setTrackedOrder] = useState(null);
+  const [justPlaced, setJustPlaced] = useState(false);
   const [confirmRemoveId, setConfirmRemoveId] = useState(null);
   const [deliverySettings, setDeliverySettings] = useState({
     shopLat: null, shopLng: null, deliveryRadiusKm: 5,
@@ -195,6 +197,7 @@ export default function CartDrawer({ taxRate, onRequireLogin }) {
       });
       setTrackedOrder(order);
       setTrackedOrderId(order.id);
+      setJustPlaced(true);
       try {
         localStorage.setItem(LAST_ORDER_KEY, order.id);
       } catch {
@@ -510,6 +513,10 @@ export default function CartDrawer({ taxRate, onRequireLogin }) {
               </p>
             </div>
           </>
+        )}
+
+        {justPlaced && showTrackedOrder && (
+          <OrderSuccessOverlay onDone={() => setJustPlaced(false)} />
         )}
       </div>
 

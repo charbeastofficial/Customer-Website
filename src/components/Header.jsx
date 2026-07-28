@@ -34,7 +34,7 @@ export default function Header({ onAccountClick, floating = false }) {
   const isFloating = floating && !scrolled;
 
   return (
-    <div className="fixed top-4 left-0 right-0 z-50 flex flex-col items-center px-4 sm:px-6 lg:px-8 pointer-events-none">
+    <div className="fixed top-2 left-0 right-0 z-50 flex flex-col items-center px-4 sm:px-6 lg:px-8 pointer-events-none">
       <header
         className={`
           pointer-events-auto transition-all duration-500 w-full max-w-7xl rounded-full

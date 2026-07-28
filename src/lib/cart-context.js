@@ -78,14 +78,14 @@ export function CartProvider({ children }) {
   // A deal is added as one bundled cart line (its own name + price), not as
   // its individual component items -- `includes` just lists what's inside
   // for display/kitchen purposes.
-  const addDeal = (deal, includes = []) => {
+  const addDeal = (deal, includes = [], quantity = 1) => {
     const cartItemId = `deal-${deal.id}`;
 
     setItems((prev) => {
       const existing = prev.find((item) => item.cartItemId === cartItemId);
       if (existing) {
         return prev.map((item) =>
-          item.cartItemId === cartItemId ? { ...item, quantity: item.quantity + 1 } : item
+          item.cartItemId === cartItemId ? { ...item, quantity: item.quantity + quantity } : item
         );
       }
       return [
@@ -100,7 +100,7 @@ export function CartProvider({ children }) {
           unitPrice: deal.price,
           modifiers: [],
           includes,
-          quantity: 1,
+          quantity,
           note: "",
         },
       ];

@@ -7,6 +7,23 @@ import Eyebrow from "./Eyebrow";
 import ProductCard from "./ProductCard";
 import ProductDetailModal from "./ProductDetailModal";
 
+// Builds categoryId -> position in the admin's arrangement (top-level
+// categories in sortOrder, each one's subcategories right after it in their
+// own sortOrder) so products can be grouped/ordered to match Menu tab order.
+function buildCategoryOrderIndex(categories) {
+  const topLevel = categories.filter((c) => !c.parentId).sort((a, b) => a.sortOrder - b.sortOrder);
+  const index = new Map();
+  let i = 0;
+  for (const top of topLevel) {
+    index.set(top.id, i++);
+    const children = categories.filter((c) => c.parentId === top.id).sort((a, b) => a.sortOrder - b.sortOrder);
+    for (const child of children) {
+      index.set(child.id, i++);
+    }
+  }
+  return index;
+}
+
 export default function MenuSection({ categories, products }) {
   const [activeCategory, setActiveCategory] = useState("all");
   const [customizeProduct, setCustomizeProduct] = useState(null);
@@ -16,13 +33,30 @@ export default function MenuSection({ categories, products }) {
 
   const filteredProducts = useMemo(() => {
     const childIds = categories.filter((c) => c.parentId === activeCategory).map((c) => c.id);
+    const categoryIndex = buildCategoryOrderIndex(categories);
 
-    return products.filter((p) => {
-      return activeCategory === "all" || p.categoryID === activeCategory || childIds.includes(p.categoryID);
-    });
+    return products
+      .filter((p) => {
+        return activeCategory === "all" || p.categoryID === activeCategory || childIds.includes(p.categoryID);
+      })
+      .sort((a, b) => {
+        const ia = categoryIndex.get(a.categoryID) ?? Infinity;
+        const ib = categoryIndex.get(b.categoryID) ?? Infinity;
+        if (ia !== ib) return ia - ib;
+        return a.name.localeCompare(b.name);
+      });
   }, [products, categories, activeCategory]);
 
-  const categoryOf = (product) => categories.find((c) => c.id === product.categoryID);
+  // A product's own category is used for its icon/name, but if that
+  // category has no image of its own (common for subcategories, which often
+  // don't get a dedicated photo), fall back to the parent category's image
+  // so the product still gets a themed placeholder instead of a blank icon.
+  const categoryOf = (product) => {
+    const cat = categories.find((c) => c.id === product.categoryID);
+    if (!cat || cat.imageURL) return cat;
+    const parent = categories.find((c) => c.id === cat.parentId);
+    return parent?.imageURL ? { ...cat, imageURL: parent.imageURL } : cat;
+  };
 
   return (
     <section id="menu" className="border-y border-stone-soft bg-cream-soft py-20 lg:py-28">
@@ -40,10 +74,11 @@ export default function MenuSection({ categories, products }) {
         </Reveal>
 
         <div className="relative mt-12">
-          <div className="flex gap-4 overflow-x-auto p-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex gap-6 overflow-x-auto p-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <CategoryCard
               label="All Dishes"
               icon={<AllDishesIcon />}
+              image="/all-dishes.png"
               active={activeCategory === "all"}
               onClick={() => setActiveCategory("all")}
               style={{ animationDelay: "0ms" }}
@@ -100,9 +135,10 @@ export default function MenuSection({ categories, products }) {
 function AllDishesIcon() {
   return (
     <svg className="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2" />
-      <path d="M7 2v20" />
-      <path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" />
+      <rect x="3" y="3" width="7.5" height="7.5" rx="1.75" />
+      <rect x="13.5" y="3" width="7.5" height="7.5" rx="1.75" />
+      <rect x="3" y="13.5" width="7.5" height="7.5" rx="1.75" />
+      <rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.75" />
     </svg>
   );
 }
@@ -125,7 +161,7 @@ function CategoryCard({ label, icon, image, active, onClick, style }) {
       {/* Icon/Image Container */}
       <div className="relative">
         <span
-          className={`relative flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl text-3xl shadow-sm transition-all duration-300 ${
+          className={`relative flex h-25 w-25 items-center justify-center overflow-hidden rounded-2xl text-3xl shadow-sm transition-all duration-300 ${
             active
               ? "scale-110 bg-brand text-white shadow-[0_12px_32px_-12px_rgba(194,65,12,0.5)] ring-2 ring-brand/20 ring-offset-2 ring-offset-cream-soft"
               : "bg-white/80 backdrop-blur-sm ring-1 ring-stone/20 hover:scale-105 hover:shadow-md hover:ring-brand/30 group-hover:bg-white"

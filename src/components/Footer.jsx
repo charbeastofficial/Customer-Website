@@ -91,7 +91,7 @@ export default function Footer() {
           </Reveal>
 
           <Reveal delay={100}>
-            <div className="flex flex-col items-center text-center md:items-start md:text-left">
+            <div className="flex flex-col items-start text-left">
               <h4 className="text-sm font-bold tracking-widest text-white uppercase mb-6">Explore</h4>
               <ul className="flex flex-col gap-4">
                 {LINKS.map((link) => {
@@ -111,7 +111,7 @@ export default function Footer() {
           </Reveal>
 
           <Reveal delay={200}>
-            <div className="flex flex-col items-center text-center md:items-start md:text-left" id="contact">
+            <div className="flex flex-col items-start text-left" id="contact">
               <h4 className="text-sm font-bold tracking-widest text-white uppercase mb-6">Contact</h4>
               <ul className="flex flex-col gap-4 text-sm text-cream/70">
                 <li className="flex items-center gap-3 transition hover:text-white">
@@ -160,7 +160,7 @@ export default function Footer() {
           </Reveal>
 
           <Reveal delay={300}>
-            <div className="flex flex-col items-center text-center md:items-start md:text-left">
+            <div className="flex flex-col items-start text-left">
               <h4 className="text-sm font-bold tracking-widest text-white uppercase mb-6">Hours</h4>
               {hours.length > 0 ? (
                 <ul className="flex flex-col gap-4 text-sm text-cream/70">
