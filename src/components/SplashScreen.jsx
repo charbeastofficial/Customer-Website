@@ -1,17 +1,33 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 
 export default function SplashScreen({ children }) {
   const [phase, setPhase] = useState("enter");
-  const [show, setShow] = useState(() => !sessionStorage.getItem("charbeast_splash_shown"));
+  // Always starts true so server and client render the same markup on first
+  // paint (sessionStorage doesn't exist during server prerendering). The
+  // layout effect below then hides it synchronously, before the browser
+  // paints, if this session has already shown it -- no flash, no mismatch.
+  const [show, setShow] = useState(true);
+
+  useLayoutEffect(() => {
+    try {
+      if (sessionStorage.getItem("charbeast_splash_shown")) setShow(false);
+    } catch {
+      // private browsing etc. -- worst case it just shows once per tab
+    }
+  }, []);
 
   useEffect(() => {
     if (!show) return;
     // Mark it shown immediately (not just when it finishes) so a quick
     // reload/navigation mid-animation still won't replay it this session.
-    sessionStorage.setItem("charbeast_splash_shown", "1");
+    try {
+      sessionStorage.setItem("charbeast_splash_shown", "1");
+    } catch {
+      // private browsing etc.
+    }
     const enterTimer = setTimeout(() => setPhase("exit"), 1200);
     const removeTimer = setTimeout(() => setShow(false), 2000);
     return () => {
