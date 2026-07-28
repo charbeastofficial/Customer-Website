@@ -6,33 +6,38 @@ import { formatCurrency } from "@/lib/currency";
 import { useCart } from "@/lib/cart-context";
 
 export default function ProductCard({ product, category, onCustomize, style }) {
-  const { items, addItem, updateQuantity } = useCart();
+  const { items, updateQuantity } = useCart();
   const [brokenSrc, setBrokenSrc] = useState(null);
   const [imgLoaded, setImgLoaded] = useState(false);
 
-  const hasModifiers = product.modifiers?.length > 0;
-  const hasSizes = product.sizes?.length > 0;
-  const needsCustomization = hasModifiers || hasSizes;
-  const cartItem = items.find((item) => item.productId === product.id && item.modifiers.length === 0);
+  // Only a "plain" purchase (no size/modifiers/add-ons picked) shows the
+  // card's own quick +/- stepper -- anything customized was chosen through
+  // the detail dialog and is adjusted from the cart instead.
+  const cartItem = items.find(
+    (item) =>
+      item.productId === product.id &&
+      !item.size &&
+      item.modifiers.length === 0 &&
+      item.addons.length === 0
+  );
   const candidateImage = product.imageURL || category?.imageURL || null;
   const image = candidateImage && candidateImage !== brokenSrc ? candidateImage : null;
   const discount = product.discountPercent > 0 ? product.discountPercent : (category?.discountPercent || 0);
   const discountedPrice = discount > 0 ? product.basePrice * (1 - discount / 100) : null;
 
-  const handleAdd = () => {
-    if (needsCustomization) {
-      onCustomize(product);
-    } else {
-      addItem(product);
-    }
-  };
+  const handleAdd = () => onCustomize(product, category);
 
   return (
     <div
       style={style}
       className="group relative flex animate-[fadeUp_0.5s_ease-out_backwards] flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-stone/15 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-ink/5 hover:ring-brand/30"
     >
-      <div className="relative aspect-[4/3] w-full overflow-hidden bg-cream-soft">
+      <button
+        type="button"
+        onClick={handleAdd}
+        aria-label={`View ${product.name}`}
+        className="relative aspect-[4/3] w-full overflow-hidden bg-cream-soft text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+      >
         {discount > 0 && (
           <div className="absolute left-2.5 top-2.5 z-10 rounded-full bg-brand px-2.5 py-1 text-[11px] font-bold tracking-wide text-white shadow-md">
             -{discount}%
@@ -68,7 +73,7 @@ export default function ProductCard({ product, category, onCustomize, style }) {
             )}
           </div>
         )}
-      </div>
+      </button>
 
       <div className="flex flex-1 flex-col p-4 sm:p-5">
         <h3 className="line-clamp-2 text-sm font-bold leading-snug text-ink sm:text-[15px]">

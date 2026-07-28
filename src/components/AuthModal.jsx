@@ -47,6 +47,7 @@ export default function AuthModal({ open, onClose }) {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [signedUp, setSignedUp] = useState(false);
@@ -57,6 +58,7 @@ export default function AuthModal({ open, onClose }) {
     setPhone("");
     setPassword("");
     setShowPassword(false);
+    setRememberMe(true);
     setError("");
     setSignedUp(false);
   };
@@ -72,7 +74,7 @@ export default function AuthModal({ open, onClose }) {
     setLoading(true);
     try {
       if (mode === "login") {
-        await signIn(email, password);
+        await signIn(email, password, rememberMe);
         handleClose();
       } else {
         await signUp(email, password, name, phone);
@@ -212,6 +214,18 @@ export default function AuthModal({ open, onClose }) {
                   {showPassword ? <EyeOffIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
                 </button>
               </div>
+
+              {mode === "login" && (
+                <label className="flex cursor-pointer items-center gap-2.5 py-1">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="h-4 w-4 rounded border-stone text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                  />
+                  <span className="text-sm text-ink-soft">Remember me</span>
+                </label>
+              )}
 
               {error && <p className="text-sm font-medium text-brand">{error}</p>}
 

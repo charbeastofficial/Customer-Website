@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { supabase } from "./supabase";
+import { supabase, setRememberMe } from "./supabase";
 
 const AuthContext = createContext(null);
 
@@ -34,7 +34,8 @@ export function AuthProvider({ children }) {
     return data;
   };
 
-  const signIn = async (email, password) => {
+  const signIn = async (email, password, remember = true) => {
+    setRememberMe(remember);
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
     return data;

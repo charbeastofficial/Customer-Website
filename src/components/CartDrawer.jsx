@@ -187,6 +187,7 @@ export default function CartDrawer({ taxRate, onRequireLogin }) {
                 notes: [
                   item.size && item.size.name,
                   ...item.modifiers.map((m) => m.name),
+                  ...item.addons.map((a) => a.name),
                   item.note,
                 ].filter(Boolean).join(" — "),
               }
@@ -286,7 +287,7 @@ export default function CartDrawer({ taxRate, onRequireLogin }) {
                       {!item.isDeal && (
                         <p className="mt-0.5 truncate text-xs text-ink-soft/70">
                           {item.size && <span className="font-medium text-ink/60">{item.size.name} · </span>}
-                          {item.modifiers.map((m) => m.name).join(", ")}
+                          {[...item.modifiers, ...item.addons].map((m) => m.name).join(", ")}
                         </p>
                       )}
                       <p className="mt-1 text-sm font-bold text-brand">{formatCurrency(item.unitPrice)}</p>

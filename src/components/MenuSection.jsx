@@ -5,11 +5,12 @@ import Container from "./Container";
 import Reveal from "./Reveal";
 import Eyebrow from "./Eyebrow";
 import ProductCard from "./ProductCard";
-import ModifierModal from "./ModifierModal";
+import ProductDetailModal from "./ProductDetailModal";
 
 export default function MenuSection({ categories, products }) {
   const [activeCategory, setActiveCategory] = useState("all");
   const [customizeProduct, setCustomizeProduct] = useState(null);
+  const [customizeCategory, setCustomizeCategory] = useState(null);
 
   const topCategories = categories.filter((c) => !c.parentId);
 
@@ -79,7 +80,7 @@ export default function MenuSection({ categories, products }) {
                 key={product.id}
                 product={product}
                 category={categoryOf(product)}
-                onCustomize={setCustomizeProduct}
+                onCustomize={(p, c) => { setCustomizeProduct(p); setCustomizeCategory(c); }}
                 style={{ animationDelay: `${Math.min(i, 16) * 30}ms` }}
               />
             ))}
@@ -87,7 +88,11 @@ export default function MenuSection({ categories, products }) {
         )}
       </Container>
 
-      <ModifierModal product={customizeProduct} onClose={() => setCustomizeProduct(null)} />
+      <ProductDetailModal
+        product={customizeProduct}
+        category={customizeCategory}
+        onClose={() => setCustomizeProduct(null)}
+      />
     </section>
   );
 }

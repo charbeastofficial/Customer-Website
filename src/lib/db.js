@@ -23,6 +23,21 @@ function mapModifier(row) {
   };
 }
 
+function mapAddon(row) {
+  return {
+    id: row.id,
+    name: row.name,
+    price: Number(row.price),
+    imageURL: row.image_url || "",
+  };
+}
+
+// product_addons rows come in as { sort_order, addons: {...} } from the
+// `product_addons(sort_order, addons(*))` embedded select.
+function mapProductAddon(row) {
+  return mapAddon(row.addons);
+}
+
 function mapProductSize(row) {
   return {
     id: row.id,
@@ -32,7 +47,7 @@ function mapProductSize(row) {
   };
 }
 
-function mapProduct(row, modifiers = [], sizes = []) {
+function mapProduct(row, modifiers = [], sizes = [], addons = []) {
   return {
     id: row.id,
     name: row.name,
@@ -43,6 +58,7 @@ function mapProduct(row, modifiers = [], sizes = []) {
     isAvailable: row.is_available,
     modifiers: modifiers.map(mapModifier),
     sizes: sizes.map(mapProductSize),
+    addons: addons.filter((pa) => pa.addons?.is_available !== false).map(mapProductAddon),
     discountPercent: Number(row.discount_percent) || 0,
   };
 }
@@ -131,7 +147,7 @@ export const db = {
   async getProducts() {
     const { data, error } = await supabase
       .from("products")
-      .select("*, product_modifiers(*), product_sizes(*)")
+      .select("*, product_modifiers(*), product_sizes(*), product_addons(sort_order, addons(*))")
       .eq("is_available", true)
       .order("name");
     if (error) throw error;
@@ -142,7 +158,10 @@ export const db = {
       const sizes = (row.product_sizes || []).sort(
         (a, b) => a.sort_order - b.sort_order
       );
-      return mapProduct(row, modifiers, sizes);
+      const addons = (row.product_addons || []).sort(
+        (a, b) => a.sort_order - b.sort_order
+      );
+      return mapProduct(row, modifiers, sizes, addons);
     });
   },
 

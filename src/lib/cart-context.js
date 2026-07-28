@@ -38,18 +38,22 @@ export function CartProvider({ children }) {
     }
   }, [items, hydrated]);
 
-  const addItem = (product, modifiers = [], note = "", size = null) => {
+  const addItem = (product, modifiers = [], note = "", size = null, addons = [], quantity = 1) => {
     const sizeId = size ? `-${size.id}` : "";
     const modId = modifiers.map((m) => m.name).sort().join("|");
-    const cartItemId = `${product.id}${sizeId}-${modId}`;
+    const addonId = addons.map((a) => a.id).sort().join("|");
+    const cartItemId = `${product.id}${sizeId}-${modId}-${addonId}`;
     const basePrice = size ? size.price : product.basePrice;
-    const unitPrice = basePrice + modifiers.reduce((acc, m) => acc + m.price, 0);
+    const unitPrice =
+      basePrice +
+      modifiers.reduce((acc, m) => acc + m.price, 0) +
+      addons.reduce((acc, a) => acc + a.price, 0);
 
     setItems((prev) => {
       const existing = prev.find((item) => item.cartItemId === cartItemId);
       if (existing) {
         return prev.map((item) =>
-          item.cartItemId === cartItemId ? { ...item, quantity: item.quantity + 1 } : item
+          item.cartItemId === cartItemId ? { ...item, quantity: item.quantity + quantity } : item
         );
       }
       return [
@@ -62,8 +66,9 @@ export function CartProvider({ children }) {
           categoryID: product.categoryID,
           unitPrice,
           modifiers,
+          addons,
           size,
-          quantity: 1,
+          quantity,
           note,
         },
       ];
