@@ -32,8 +32,8 @@ export const metadata = buildMetadata({
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${bebasNeue.variable} ${anton.variable} ${lexend.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col bg-cream text-ink font-sans">
+    <html lang="en" className={`${bebasNeue.variable} ${anton.variable} ${lexend.variable} antialiased`}>
+      <body className="flex min-h-screen flex-col bg-cream text-ink font-sans">
         <JsonLd />
         <AuthProvider>
           <CartProvider>

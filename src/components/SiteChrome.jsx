@@ -12,7 +12,7 @@ export default function SiteChrome({ taxRate, children }) {
   return (
     <>
       <Header onAccountClick={() => setAuthOpen(true)} />
-      <main>{children}</main>
+      <main className="flex-1">{children}</main>
       <Footer />
       <CartDrawer taxRate={taxRate ?? 0} onRequireLogin={() => setAuthOpen(true)} />
       <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />

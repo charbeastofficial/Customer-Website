@@ -183,7 +183,7 @@ export default function Footer() {
         </div>
 
         <Reveal delay={400}>
-          <div className="mt-16 flex flex-col items-center justify-between gap-4 rounded-3xl bg-white/5 px-6 py-5 text-xs text-cream/50 ring-1 ring-white/10 sm:flex-row lg:px-8">
+          <div className="mt-16 flex flex-col items-center justify-between gap-4  px-6 py-5 text-xs text-cream/50 ring-1 ring-white/10 sm:flex-row lg:px-8">
             <span>© {new Date().getFullYear()} CharBeast. All rights reserved.</span>
             <span>
               Powered by{" "}

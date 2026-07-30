@@ -27,7 +27,7 @@ export default function HomeView({
   return (
     <>
       <Header onAccountClick={() => setAuthOpen(true)} floating />
-      <main>
+      <main className="flex-1">
         <Hero
           heroMode={heroMode}
           heroImages={heroImages}
