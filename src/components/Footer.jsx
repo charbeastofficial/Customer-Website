@@ -11,7 +11,7 @@ function parseHours(raw) {
   if (!raw) return [];
   try {
     const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed) && parsed.length) return parsed;
+    if (Array.isArray(parsed) && parsed.length === 2) return parsed;
   } catch { }
   return [];
 }
@@ -162,20 +162,19 @@ export default function Footer() {
           <Reveal delay={300}>
             <div className="flex flex-col items-start text-left">
               <h4 className="text-sm font-bold tracking-widest text-white uppercase mb-6">Hours</h4>
-              {hours.length > 0 ? (
+              {hours.length === 2 ? (
                 <ul className="flex flex-col gap-4 text-sm text-cream/70">
                   {hours.map((h) => (
-                    <li key={h.day} className="flex flex-col">
-                      <span className="text-brand font-semibold mb-0.5">{h.day}</span>
+                    <li key={h.label} className="flex flex-col">
+                      <span className="text-brand font-semibold mb-0.5">{h.label}</span>
                       <span>{h.closed ? "Closed" : `${formatTime(h.open)} – ${formatTime(h.close)}`}</span>
                     </li>
                   ))}
                 </ul>
               ) : (
                 <ul className="flex flex-col gap-4 text-sm text-cream/70">
-                  <li className="flex flex-col"><span className="text-brand font-semibold mb-0.5">Mon – Thu</span><span>12:00 PM – 11:00 PM</span></li>
-                  <li className="flex flex-col"><span className="text-brand font-semibold mb-0.5">Fri – Sat</span><span>12:00 PM – 1:00 AM</span></li>
-                  <li className="flex flex-col"><span className="text-brand font-semibold mb-0.5">Sunday</span><span>1:00 PM – 11:00 PM</span></li>
+                  <li className="flex flex-col"><span className="text-brand font-semibold mb-0.5">Monday - Friday</span><span>12:00 PM – 11:00 PM</span></li>
+                  <li className="flex flex-col"><span className="text-brand font-semibold mb-0.5">Weekend</span><span>12:00 PM – 1:00 AM</span></li>
                 </ul>
               )}
             </div>

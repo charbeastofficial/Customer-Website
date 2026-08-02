@@ -25,6 +25,7 @@ export default async function Home() {
       deals={deals}
       reviews={reviews}
       taxRate={siteSettings.taxRate}
+      memberDiscountPercent={siteSettings.memberDiscountPercent}
       heroMode={siteSettings.heroMode}
       heroImages={images}
       heroTitle={siteSettings.heroTitle}

@@ -1,9 +1,5 @@
 import { supabase } from "./supabase";
 
-function generateId(prefix) {
-  return `${prefix}_${Math.random().toString(36).slice(2, 11)}`;
-}
-
 function mapCategory(row) {
   return {
     id: row.id,
@@ -111,6 +107,7 @@ function mapOrder(row, items = []) {
     cancelReason: row.cancel_reason || "",
     isPaid: row.is_paid,
     source: row.source,
+    discountAmount: Number(row.discount_amount) || 0,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     items: items.map(mapOrderItem),
@@ -185,8 +182,16 @@ export const db = {
     (data || []).forEach((row) => {
       settings[row.key] = row.value;
     });
+    // Online orders are always cash-on-delivery (payment_method is hardcoded
+    // to "Cash" below, no payment gateway exists), so when tax varies by
+    // payment method, the cash rate is the one that applies here.
+    const taxByPaymentEnabled = settings.tax_by_payment_enabled === "true";
+    const flatTaxRate = settings.tax_rate !== undefined ? parseFloat(settings.tax_rate) : 0.05;
+    const cashTaxRate = settings.cash_tax_rate !== undefined ? parseFloat(settings.cash_tax_rate) : 0.16;
+
     return {
-      taxRate: settings.tax_rate !== undefined ? parseFloat(settings.tax_rate) : 0.05,
+      taxRate: taxByPaymentEnabled ? cashTaxRate : flatTaxRate,
+      memberDiscountPercent: settings.member_discount_percent !== undefined ? parseFloat(settings.member_discount_percent) : 10,
       heroMode: settings.hero_mode || "carousel",
       heroTitle: settings.hero_title || "",
       heroSubtitle: settings.hero_subtitle || "",
@@ -233,11 +238,11 @@ export const db = {
   },
 
   async createOrder(order) {
-    const id = generateId("order");
     const { items = [], ...orderFields } = order;
 
-    const { error: orderError } = await supabase.from("orders").insert({
-      id,
+    // id is server-assigned (sequential, see assign_sequential_order_id
+    // trigger) -- insert without one and read back whatever got assigned.
+    const { data: inserted, error: orderError } = await supabase.from("orders").insert({
       customer_id: orderFields.customerId,
       customer_name: orderFields.customerName,
       customer_phone: orderFields.customerPhone || "",
@@ -251,8 +256,10 @@ export const db = {
       delivery_lng: orderFields.orderType === "Delivery" ? orderFields.deliveryLng ?? null : null,
       is_paid: false,
       source: "Online",
-    });
+      discount_amount: orderFields.discountAmount || 0,
+    }).select("id").single();
     if (orderError) throw orderError;
+    const id = inserted.id;
 
     if (items.length > 0) {
       const rows = items.map((item) => ({
@@ -295,6 +302,19 @@ export const db = {
     const { data, error } = await supabase.from("reviews").select("id").eq("order_id", orderId).maybeSingle();
     if (error) throw error;
     return !!data;
+  },
+
+  async getMyReviews(customerId) {
+    if (!customerId) return [];
+    const { data, error } = await supabase.from("reviews").select("*").eq("customer_id", customerId);
+    if (error) throw error;
+    return (data || []).map((row) => ({
+      id: row.id,
+      orderId: row.order_id,
+      rating: row.rating,
+      comment: row.comment,
+      createdAt: row.created_at,
+    }));
   },
 
   async getDeliveryZones() {

@@ -125,7 +125,10 @@ export default function Header({ onAccountClick, floating = false }) {
             >
               <ShoppingBagIcon className="h-5 w-5 transition-transform duration-300 group-hover:rotate-[-5deg]" />
               {itemCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 flex h-5 min-w-[20px] animate-bounce-once items-center justify-center rounded-full bg-brand px-1.5 text-[10px] font-bold text-white shadow-lg shadow-brand/30">
+                <span
+                  key={itemCount}
+                  className="absolute -top-0.5 -right-0.5 flex h-5 min-w-[20px] animate-[badgePulse_0.4s_ease-out] items-center justify-center rounded-full bg-brand px-1.5 text-[10px] font-bold text-white shadow-lg shadow-brand/30"
+                >
                   {itemCount}
                 </span>
               )}

@@ -8,6 +8,7 @@ import { db } from "@/lib/db";
 import { distanceKm } from "@/lib/geo";
 import LocationPicker from "./LocationPicker";
 import OrderSuccessOverlay from "./OrderSuccessOverlay";
+import ReviewForm from "./ReviewForm";
 import { useToast } from "./Toast";
 
 const LAST_ORDER_KEY = "charbeast_last_order_id";
@@ -28,9 +29,9 @@ const STATUS_COLORS = {
   Cancelled: "bg-red-500",
 };
 
-export default function CartDrawer({ taxRate, onRequireLogin }) {
+export default function CartDrawer({ taxRate, memberDiscountPercent = 0, onRequireLogin }) {
   const { items, updateQuantity, removeItem, subtotal, isOpen, setIsOpen, clearCart } = useCart();
-  const { user } = useAuth();
+  const { user, isMember } = useAuth();
   const toast = useToast();
 
   const [orderType, setOrderType] = useState("Takeaway");
@@ -52,6 +53,7 @@ export default function CartDrawer({ taxRate, onRequireLogin }) {
   const [deliveryZones, setDeliveryZones] = useState([]);
   const [deliveryAreas, setDeliveryAreas] = useState([]);
   const [selectedArea, setSelectedArea] = useState(null);
+  const [contactPhone, setContactPhone] = useState('');
 
   const deliveryDistance = orderType === "Delivery" && deliveryLocation?.lat != null && deliverySettings.shopLat != null
     ? distanceKm(deliveryLocation.lat, deliveryLocation.lng, deliverySettings.shopLat, deliverySettings.shopLng)
@@ -78,20 +80,24 @@ export default function CartDrawer({ taxRate, onRequireLogin }) {
     return baseFee + chargeableKm * perKmRate;
   })();
 
-  const tax = subtotal * taxRate;
-  const total = subtotal + tax + deliveryFee;
+  const discountAmount = isMember ? subtotal * (memberDiscountPercent / 100) : 0;
+  const tax = (subtotal - discountAmount) * taxRate;
+  const total = subtotal - discountAmount + tax + deliveryFee;
 
   useEffect(() => {
     db.getSiteSettings()
-      .then((s) => setDeliverySettings({
-        shopLat: s.shopLat, shopLng: s.shopLng, deliveryRadiusKm: s.deliveryRadiusKm,
-        deliveryFreeMinAmount: s.deliveryFreeMinAmount || 0,
-        deliveryFreeMaxDistance: s.deliveryFreeMaxDistance || 0,
-        deliveryBaseFee: s.deliveryBaseFee || 0,
-        deliveryPerKmRate: s.deliveryPerKmRate || 0,
-        deliveryMaxDistance: s.deliveryMaxDistance || 0,
-        deliveryChargeType: s.deliveryChargeType || 'per_km',
-      }))
+      .then((s) => {
+        setDeliverySettings({
+          shopLat: s.shopLat, shopLng: s.shopLng, deliveryRadiusKm: s.deliveryRadiusKm,
+          deliveryFreeMinAmount: s.deliveryFreeMinAmount || 0,
+          deliveryFreeMaxDistance: s.deliveryFreeMaxDistance || 0,
+          deliveryBaseFee: s.deliveryBaseFee || 0,
+          deliveryPerKmRate: s.deliveryPerKmRate || 0,
+          deliveryMaxDistance: s.deliveryMaxDistance || 0,
+          deliveryChargeType: s.deliveryChargeType || 'per_km',
+        });
+        setContactPhone(s.contactPhone || '');
+      })
       .catch(() => {});
     db.getDeliveryZones().then(setDeliveryZones).catch(() => {});
     db.getDeliveryAreas().then(setDeliveryAreas).catch(() => {});
@@ -155,7 +161,10 @@ export default function CartDrawer({ taxRate, onRequireLogin }) {
         return;
       }
       if (!deliveryLocation.withinRadius) {
-        setError(`Sorry, that location is outside our ${deliverySettings.deliveryRadiusKm} km delivery zone.`);
+        setError(
+          `Sorry, that location is outside our ${deliverySettings.deliveryRadiusKm} km delivery zone.` +
+            (contactPhone ? ` Please call us at ${contactPhone} to place this order.` : ' Please call us to place this order.')
+        );
         return;
       }
     }
@@ -172,6 +181,7 @@ export default function CartDrawer({ taxRate, onRequireLogin }) {
         deliveryLng: orderType === "Delivery" ? deliveryLocation.lng : null,
         deliveryFee: parseFloat(deliveryFee.toFixed(2)),
         totalAmount: parseFloat(total.toFixed(2)),
+        discountAmount: parseFloat(discountAmount.toFixed(2)),
         items: items.map((item) =>
           item.isDeal
             ? {
@@ -449,6 +459,12 @@ export default function CartDrawer({ taxRate, onRequireLogin }) {
                   <span>Subtotal</span>
                   <span>{formatCurrency(subtotal)}</span>
                 </div>
+                {discountAmount > 0 && (
+                  <div className="flex justify-between text-gold font-medium">
+                    <span>Member Discount ({memberDiscountPercent}%)</span>
+                    <span>-{formatCurrency(discountAmount)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-ink-soft">
                   <span>Tax</span>
                   <span>{formatCurrency(tax)}</span>
@@ -673,74 +689,3 @@ function OrderTracker({ order, user, onClose }) {
   );
 }
 
-function ReviewForm({ order, user, onSubmitted }) {
-  const [rating, setRating] = useState(5);
-  const [comment, setComment] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
-
-  const handleSubmit = async () => {
-    setSubmitting(true);
-    setError("");
-    try {
-      await db.submitReview({
-        orderId: order.id,
-        customerId: user.id,
-        customerName: order.customerName || user.user_metadata?.display_name || "Customer",
-        rating,
-        comment: comment.trim(),
-      });
-      onSubmitted();
-    } catch (err) {
-      console.error("Failed to submit review:", err);
-      setError("Couldn't submit your review. Please try again.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  return (
-    <div className="w-full rounded-2xl border border-stone/30 bg-white/80 backdrop-blur-sm p-5 text-left shadow-sm">
-      <p className="text-xs font-bold tracking-wider text-ink-soft/60 uppercase">Leave a Review</p>
-      <div className="mt-2 flex gap-1">
-        {[1, 2, 3, 4, 5].map((n) => (
-          <button
-            key={n}
-            type="button"
-            onClick={() => setRating(n)}
-            aria-label={`${n} star${n > 1 ? "s" : ""}`}
-            className="text-2xl leading-none transition hover:scale-110 active:scale-90"
-          >
-            <span className={n <= rating ? "text-brand" : "text-stone-soft"}>★</span>
-          </button>
-        ))}
-      </div>
-      <textarea
-        value={comment}
-        onChange={(e) => setComment(e.target.value)}
-        rows={3}
-        placeholder="How was it? (optional)"
-        className="mt-3 w-full resize-none rounded-xl border border-stone/30 bg-cream-soft/50 px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-soft/50 transition focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/10"
-      />
-      {error && <p className="mt-2 text-sm font-medium text-red-600">{error}</p>}
-      <button
-        type="button"
-        disabled={submitting}
-        onClick={handleSubmit}
-        className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-brand py-2.5 text-sm font-bold text-white transition hover:bg-brand-dark hover:shadow-lg hover:shadow-brand/30 active:scale-[0.98] disabled:opacity-60"
-      >
-        {submitting ? (
-          <>
-            <svg className="h-4 w-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-            </svg>
-            Submitting…
-          </>
-        ) : (
-          "Submit Review"
-        )}
-      </button>
-    </div>
-  );
-}

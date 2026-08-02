@@ -6,6 +6,7 @@ import Reveal from "./Reveal";
 import Eyebrow from "./Eyebrow";
 import ProductCard from "./ProductCard";
 import ProductDetailModal from "./ProductDetailModal";
+import { useAuth } from "@/lib/auth-context";
 
 // Builds categoryId -> position in the admin's arrangement (top-level
 // categories in sortOrder, each one's subcategories right after it in their
@@ -24,12 +25,23 @@ function buildCategoryOrderIndex(categories) {
   return index;
 }
 
-export default function MenuSection({ categories, products }) {
+export default function MenuSection({ categories, products, memberDiscountPercent = 0 }) {
+  const { isMember } = useAuth();
   const [activeCategory, setActiveCategory] = useState("all");
   const [customizeProduct, setCustomizeProduct] = useState(null);
   const [customizeCategory, setCustomizeCategory] = useState(null);
 
   const topCategories = categories.filter((c) => !c.parentId);
+
+  // Selecting a top-level category that has subcategories (e.g. Burgers ->
+  // Beef/Chicken/Veggie) surfaces those as a second row of pills to narrow
+  // further, instead of only ever showing one flat "Burgers" grid.
+  const activeCategoryObj = categories.find((c) => c.id === activeCategory) || null;
+  const activeTopLevelId = activeCategoryObj?.parentId || activeCategory;
+  const activeTopLevelCategory = categories.find((c) => c.id === activeTopLevelId) || null;
+  const subCategories = categories
+    .filter((c) => c.parentId === activeTopLevelId)
+    .sort((a, b) => a.sortOrder - b.sortOrder);
 
   const filteredProducts = useMemo(() => {
     const childIds = categories.filter((c) => c.parentId === activeCategory).map((c) => c.id);
@@ -45,6 +57,27 @@ export default function MenuSection({ categories, products }) {
         if (ia !== ib) return ia - ib;
         return a.name.localeCompare(b.name);
       });
+  }, [products, categories, activeCategory]);
+
+  // When browsing "All Dishes", group products under their own category's
+  // heading instead of one undifferentiated grid -- easier to scan a menu
+  // that actually has categories set up.
+  const groupedByCategory = useMemo(() => {
+    if (activeCategory !== "all") return null;
+    const categoryIndex = buildCategoryOrderIndex(categories);
+    const groups = new Map();
+    for (const p of products) {
+      const key = p.categoryID || "__uncategorized";
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(p);
+    }
+    return Array.from(groups.entries())
+      .map(([key, prods]) => ({
+        category: categories.find((c) => c.id === key) || null,
+        products: prods.sort((a, b) => a.name.localeCompare(b.name)),
+        order: categoryIndex.get(key) ?? Infinity,
+      }))
+      .sort((a, b) => a.order - b.order);
   }, [products, categories, activeCategory]);
 
   // A product's own category is used for its icon/name, but if that
@@ -99,6 +132,24 @@ export default function MenuSection({ categories, products }) {
           <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-cream-soft to-transparent" />
         </div>
 
+        {activeCategory !== "all" && subCategories.length > 0 && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            <SubCategoryPill
+              label={`All ${activeTopLevelCategory?.name || ""}`}
+              active={activeCategory === activeTopLevelId}
+              onClick={() => setActiveCategory(activeTopLevelId)}
+            />
+            {subCategories.map((sub) => (
+              <SubCategoryPill
+                key={sub.id}
+                label={sub.name}
+                active={activeCategory === sub.id}
+                onClick={() => setActiveCategory(sub.id)}
+              />
+            ))}
+          </div>
+        )}
+
         {filteredProducts.length === 0 ? (
           <div className="mt-16 flex flex-col items-center gap-3 rounded-3xl border border-dashed border-stone py-20 text-center text-ink-soft">
             <svg className="h-8 w-8 text-stone" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -107,6 +158,30 @@ export default function MenuSection({ categories, products }) {
               <path d="M8 11h6" />
             </svg>
             <span className="text-sm">No dishes in this category right now.</span>
+          </div>
+        ) : activeCategory === "all" ? (
+          <div className="mt-10 flex flex-col gap-12">
+            {groupedByCategory.map(({ category, products: groupProducts }) => (
+              <div key={category?.id || "uncategorized"}>
+                <h3 className="mb-5 flex items-center gap-2 text-xl font-bold text-ink">
+                  {category?.icon && <span className="text-2xl">{category.icon}</span>}
+                  {category?.name || "Other"}
+                </h3>
+                <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">
+                  {groupProducts.map((product, i) => (
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      category={categoryOf(product)}
+                      onCustomize={(p, c) => { setCustomizeProduct(p); setCustomizeCategory(c); }}
+                      style={{ animationDelay: `${Math.min(i, 16) * 30}ms` }}
+                      isMember={isMember}
+                      memberDiscountPercent={memberDiscountPercent}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         ) : (
           <div className="mt-10 grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">
@@ -117,6 +192,8 @@ export default function MenuSection({ categories, products }) {
                 category={categoryOf(product)}
                 onCustomize={(p, c) => { setCustomizeProduct(p); setCustomizeCategory(c); }}
                 style={{ animationDelay: `${Math.min(i, 16) * 30}ms` }}
+                isMember={isMember}
+                memberDiscountPercent={memberDiscountPercent}
               />
             ))}
           </div>
@@ -140,6 +217,22 @@ function AllDishesIcon() {
       <rect x="3" y="13.5" width="7.5" height="7.5" rx="1.75" />
       <rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.75" />
     </svg>
+  );
+}
+
+function SubCategoryPill({ label, active, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded-full px-4 py-2 text-sm font-bold transition ${
+        active
+          ? "bg-brand text-white shadow-md shadow-brand/20"
+          : "bg-white text-ink-soft ring-1 ring-stone/20 hover:text-ink hover:ring-brand/30"
+      }`}
+    >
+      {label}
+    </button>
   );
 }
 

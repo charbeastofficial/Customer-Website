@@ -40,7 +40,7 @@ function EyeOffIcon({ className }) {
 }
 
 export default function AuthModal({ open, onClose }) {
-  const { signIn, signUp, signOut, user } = useAuth();
+  const { signIn, signUp, signOut, user, resetPassword } = useAuth();
   const [mode, setMode] = useState("login");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -51,6 +51,7 @@ export default function AuthModal({ open, onClose }) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [signedUp, setSignedUp] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
   const reset = () => {
     setName("");
@@ -61,6 +62,8 @@ export default function AuthModal({ open, onClose }) {
     setRememberMe(true);
     setError("");
     setSignedUp(false);
+    setResetSent(false);
+    setMode("login");
   };
 
   const handleClose = () => {
@@ -76,9 +79,18 @@ export default function AuthModal({ open, onClose }) {
       if (mode === "login") {
         await signIn(email, password, rememberMe);
         handleClose();
+      } else if (mode === "forgot") {
+        await resetPassword(email);
+        setResetSent(true);
       } else {
-        await signUp(email, password, name, phone);
-        setSignedUp(true);
+        const result = await signUp(email, password, name, phone);
+        if (result?.session) {
+          // Email confirmation is off (or already satisfied) -- signUp
+          // returned an active session, so the user is already logged in.
+          handleClose();
+        } else {
+          setSignedUp(true);
+        }
       }
     } catch (err) {
       setError(err.message || "Something went wrong. Please try again.");
@@ -127,7 +139,7 @@ export default function AuthModal({ open, onClose }) {
 
   return (
     <div className="fixed inset-0 z-[70] flex animate-[fadeIn_0.15s_ease-out] items-center justify-center bg-ink/60 p-4 backdrop-blur-sm" onClick={handleClose}>
-      <div role="dialog" aria-modal="true" aria-labelledby={signedUp ? "auth-modal-confirm-title" : "auth-modal-form-title"} className="w-full max-w-sm rounded-3xl bg-white p-7 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+      <div role="dialog" aria-modal="true" aria-labelledby={signedUp || resetSent ? "auth-modal-confirm-title" : "auth-modal-form-title"} className="w-full max-w-sm rounded-3xl bg-white p-7 shadow-2xl" onClick={(e) => e.stopPropagation()}>
         {signedUp ? (
           <div className="text-center">
             <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand-soft text-brand">
@@ -149,10 +161,33 @@ export default function AuthModal({ open, onClose }) {
               Back to Log In
             </button>
           </div>
+        ) : resetSent ? (
+          <div className="text-center">
+            <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand-soft text-brand">
+              <MailIcon className="h-6 w-6" />
+            </span>
+            <h3 id="auth-modal-confirm-title" className="mt-4 text-lg font-bold text-ink">Check your email</h3>
+            <p className="mt-1 text-sm text-ink-soft">
+              We've sent a password reset link to <strong className="text-ink">{email}</strong>. Open it to choose a
+              new password.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setResetSent(false);
+                setMode("login");
+              }}
+              className="mt-6 w-full rounded-full bg-brand py-3 text-sm font-bold text-white transition hover:bg-brand-dark"
+            >
+              Back to Log In
+            </button>
+          </div>
         ) : (
           <>
             <div className="flex items-center justify-between">
-              <h3 id="auth-modal-form-title" className="text-lg font-bold text-ink">{mode === "login" ? "Log In" : "Create Account"}</h3>
+              <h3 id="auth-modal-form-title" className="text-lg font-bold text-ink">
+                {mode === "login" ? "Log In" : mode === "forgot" ? "Reset Password" : "Create Account"}
+              </h3>
               <button
                 type="button"
                 aria-label="Close"
@@ -163,7 +198,11 @@ export default function AuthModal({ open, onClose }) {
               </button>
             </div>
             <p className="mt-1 text-sm text-ink-soft">
-              {mode === "login" ? "Log in to place an order." : "Sign up to start ordering."}
+              {mode === "login"
+                ? "Log in to place an order."
+                : mode === "forgot"
+                  ? "Enter your email and we'll send you a link to reset your password."
+                  : "Sign up to start ordering."}
             </p>
 
             <form onSubmit={handleSubmit} className="mt-5 flex flex-col gap-3">
@@ -194,37 +233,51 @@ export default function AuthModal({ open, onClose }) {
                 placeholder="Email address"
                 className="rounded-xl border border-stone bg-cream-soft px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-soft/60 focus:border-brand focus:outline-none"
               />
-              <div className="relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  required
-                  minLength={6}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Password"
-                  className="w-full rounded-xl border border-stone bg-cream-soft px-3.5 py-2.5 pr-10 text-sm text-ink placeholder:text-ink-soft/60 focus:border-brand focus:outline-none"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                  aria-pressed={showPassword}
-                  className="absolute top-1/2 right-3 -translate-y-1/2 text-ink-soft/60 transition hover:text-ink"
-                >
-                  {showPassword ? <EyeOffIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
-                </button>
-              </div>
+              {mode !== "forgot" && (
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    required
+                    minLength={6}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Password"
+                    className="w-full rounded-xl border border-stone bg-cream-soft px-3.5 py-2.5 pr-10 text-sm text-ink placeholder:text-ink-soft/60 focus:border-brand focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    aria-pressed={showPassword}
+                    className="absolute top-1/2 right-3 -translate-y-1/2 text-ink-soft/60 transition hover:text-ink"
+                  >
+                    {showPassword ? <EyeOffIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
+                  </button>
+                </div>
+              )}
 
               {mode === "login" && (
-                <label className="flex cursor-pointer items-center gap-2.5 py-1">
-                  <input
-                    type="checkbox"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                    className="h-4 w-4 rounded border-stone text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-                  />
-                  <span className="text-sm text-ink-soft">Remember me</span>
-                </label>
+                <div className="flex items-center justify-between py-1">
+                  <label className="flex cursor-pointer items-center gap-2.5">
+                    <input
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      className="h-4 w-4 rounded border-stone text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                    />
+                    <span className="text-sm text-ink-soft">Remember me</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMode("forgot");
+                      setError("");
+                    }}
+                    className="text-sm font-bold text-brand"
+                  >
+                    Forgot password?
+                  </button>
+                </div>
               )}
 
               {error && <p className="text-sm font-medium text-brand">{error}</p>}
@@ -234,23 +287,45 @@ export default function AuthModal({ open, onClose }) {
                 disabled={loading}
                 className="mt-1 flex w-full items-center justify-center rounded-full bg-brand py-3.5 text-sm font-bold text-white transition hover:bg-brand-dark active:scale-[0.98] disabled:opacity-60"
               >
-                {loading ? "Please wait…" : mode === "login" ? "Log In" : "Sign Up"}
+                {loading
+                  ? "Please wait…"
+                  : mode === "login"
+                    ? "Log In"
+                    : mode === "forgot"
+                      ? "Send Reset Link"
+                      : "Sign Up"}
               </button>
             </form>
 
-            <p className="mt-4 text-center text-sm text-ink-soft">
-              {mode === "login" ? "New to CharBeast?" : "Already have an account?"}{" "}
-              <button
-                type="button"
-                onClick={() => {
-                  setMode(mode === "login" ? "signup" : "login");
-                  setError("");
-                }}
-                className="font-bold text-brand"
-              >
-                {mode === "login" ? "Sign up" : "Log in"}
-              </button>
-            </p>
+            {mode === "forgot" ? (
+              <p className="mt-4 text-center text-sm text-ink-soft">
+                Remembered it?{" "}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode("login");
+                    setError("");
+                  }}
+                  className="font-bold text-brand"
+                >
+                  Log in
+                </button>
+              </p>
+            ) : (
+              <p className="mt-4 text-center text-sm text-ink-soft">
+                {mode === "login" ? "New to CharBeast?" : "Already have an account?"}{" "}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode(mode === "login" ? "signup" : "login");
+                    setError("");
+                  }}
+                  className="font-bold text-brand"
+                >
+                  {mode === "login" ? "Sign up" : "Log in"}
+                </button>
+              </p>
+            )}
           </>
         )}
       </div>

@@ -11,8 +11,11 @@ export function ToastProvider({ children }) {
 
   const addToast = useCallback((message, type = "success", duration = 3000) => {
     const id = ++toastId;
-    setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), duration);
+    setToasts((prev) => [...prev, { id, message, type, leaving: false }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.map((t) => (t.id === id ? { ...t, leaving: true } : t)));
+      setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 200);
+    }, duration);
   }, []);
 
   return (
@@ -22,7 +25,9 @@ export function ToastProvider({ children }) {
         {toasts.map((t) => (
           <div
             key={t.id}
-            className={`pointer-events-auto animate-[fadeUp_0.2s_ease-out] rounded-xl px-4 py-3 text-sm font-semibold shadow-lg backdrop-blur-sm ${
+            className={`pointer-events-auto rounded-xl px-4 py-3 text-sm font-semibold shadow-lg backdrop-blur-sm ${
+              t.leaving ? "animate-[toastOut_0.2s_ease-in_forwards]" : "animate-[fadeUp_0.2s_ease-out]"
+            } ${
               t.type === "error"
                 ? "bg-red-600 text-white"
                 : t.type === "info"

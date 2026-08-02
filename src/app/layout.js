@@ -3,6 +3,7 @@ import "./globals.css";
 import { CartProvider } from "@/lib/cart-context";
 import { AuthProvider } from "@/lib/auth-context";
 import SplashScreen from "@/components/SplashScreen";
+import PageTransition from "@/components/PageTransition";
 import { ToastProvider } from "@/components/Toast";
 import JsonLd from "@/components/JsonLd";
 import { buildMetadata } from "@/lib/seo";
@@ -38,7 +39,9 @@ export default function RootLayout({ children }) {
         <AuthProvider>
           <CartProvider>
             <ToastProvider>
-              <SplashScreen>{children}</SplashScreen>
+              <SplashScreen>
+                <PageTransition>{children}</PageTransition>
+              </SplashScreen>
             </ToastProvider>
           </CartProvider>
         </AuthProvider>

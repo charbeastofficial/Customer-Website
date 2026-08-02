@@ -16,6 +16,7 @@ export default function HomeView({
   deals,
   reviews,
   taxRate,
+  memberDiscountPercent,
   heroMode,
   heroImages,
   heroTitle,
@@ -36,11 +37,11 @@ export default function HomeView({
           heroDescription={heroDescription}
         />
         <DealsSection deals={deals} products={products} />
-        <MenuSection categories={categories} products={products} />
+        <MenuSection categories={categories} products={products} memberDiscountPercent={memberDiscountPercent} />
         <TestimonialsSection reviews={reviews} />
       </main>
       <Footer />
-      <CartDrawer taxRate={taxRate} onRequireLogin={() => setAuthOpen(true)} />
+      <CartDrawer taxRate={taxRate} memberDiscountPercent={memberDiscountPercent} onRequireLogin={() => setAuthOpen(true)} />
       <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
     </>
   );

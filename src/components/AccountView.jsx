@@ -7,6 +7,7 @@ import { db } from "@/lib/db";
 import { formatCurrency } from "@/lib/currency";
 import Container from "./Container";
 import AuthModal from "./AuthModal";
+import ReviewForm from "./ReviewForm";
 
 const STATUS_PILL = {
   Pending: "bg-amber-500/10 text-amber-600 border-amber-200",
@@ -33,6 +34,8 @@ export default function AccountView() {
   const [displayName, setDisplayName] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [myReviews, setMyReviews] = useState({});
+  const [reviewingOrderId, setReviewingOrderId] = useState(null);
 
   useEffect(() => {
     if (user) setDisplayName(user.user_metadata?.display_name || "");
@@ -44,6 +47,11 @@ export default function AccountView() {
     db.getMyOrders(user.id)
       .then(setOrders)
       .finally(() => setOrdersLoading(false));
+    db.getMyReviews(user.id)
+      .then((reviews) => {
+        setMyReviews(Object.fromEntries(reviews.map((r) => [r.orderId, r])));
+      })
+      .catch(() => {});
   }, [user]);
 
   if (loading) {
@@ -265,6 +273,43 @@ export default function AccountView() {
                       {formatCurrency(order.totalAmount)}
                     </span>
                   </div>
+
+                  {/* Review */}
+                  {order.status === "Completed" && (
+                    <div className="mt-3 border-t border-stone/20 pt-3">
+                      {myReviews[order.id] ? (
+                        <div>
+                          <div className="flex items-center gap-1 text-lg leading-none">
+                            {[1, 2, 3, 4, 5].map((n) => (
+                              <span key={n} className={n <= myReviews[order.id].rating ? "text-brand" : "text-stone-soft"}>★</span>
+                            ))}
+                          </div>
+                          {myReviews[order.id].comment && (
+                            <p className="mt-1 text-sm text-ink-soft/70">"{myReviews[order.id].comment}"</p>
+                          )}
+                        </div>
+                      ) : reviewingOrderId === order.id ? (
+                        <ReviewForm
+                          order={order}
+                          user={user}
+                          onSubmitted={() => {
+                            db.getMyReviews(user.id).then((reviews) => {
+                              setMyReviews(Object.fromEntries(reviews.map((r) => [r.orderId, r])));
+                            });
+                            setReviewingOrderId(null);
+                          }}
+                        />
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setReviewingOrderId(order.id)}
+                          className="rounded-full border border-stone/30 px-4 py-2 text-xs font-bold text-ink-soft transition hover:border-brand hover:text-brand"
+                        >
+                          Leave a Review
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               ))
             )}

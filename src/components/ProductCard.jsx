@@ -5,7 +5,7 @@ import { useState } from "react";
 import { formatCurrency } from "@/lib/currency";
 import { useCart } from "@/lib/cart-context";
 
-export default function ProductCard({ product, category, onCustomize, style }) {
+export default function ProductCard({ product, category, onCustomize, style, isMember = false, memberDiscountPercent = 0 }) {
   const { items, updateQuantity } = useCart();
   const [brokenSrc, setBrokenSrc] = useState(null);
   const [imgLoaded, setImgLoaded] = useState(false);
@@ -24,6 +24,8 @@ export default function ProductCard({ product, category, onCustomize, style }) {
   const image = candidateImage && candidateImage !== brokenSrc ? candidateImage : null;
   const discount = product.discountPercent > 0 ? product.discountPercent : (category?.discountPercent || 0);
   const discountedPrice = discount > 0 ? product.basePrice * (1 - discount / 100) : null;
+  const regularPrice = discountedPrice ?? product.basePrice;
+  const memberPrice = isMember && memberDiscountPercent > 0 ? regularPrice * (1 - memberDiscountPercent / 100) : null;
 
   const handleAdd = () => onCustomize(product, category);
 
@@ -87,7 +89,19 @@ export default function ProductCard({ product, category, onCustomize, style }) {
         )}
 
         <div className="mt-2.5">
-          {discountedPrice ? (
+          {memberPrice ? (
+            <div className="flex flex-col gap-0.5">
+              <div className="flex items-baseline gap-2">
+                <span className="text-base font-bold text-gold">
+                  {formatCurrency(memberPrice)}
+                </span>
+                <span className="text-xs font-medium text-ink-soft/50 line-through">
+                  {formatCurrency(regularPrice)}
+                </span>
+              </div>
+              <span className="text-[10px] font-bold uppercase tracking-wide text-gold">Member Price</span>
+            </div>
+          ) : discountedPrice ? (
             <div className="flex items-baseline gap-2">
               <span className="text-base font-bold text-brand">
                 {formatCurrency(discountedPrice)}
